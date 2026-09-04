@@ -6,8 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Rainfall & Inundation Warning System</title>
     <!-- Google Fonts & FontAwesome Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
@@ -39,7 +38,6 @@
             padding: 20px;
         }
 
-
         .container {
             width: 100%;
             max-width: 600px;
@@ -51,7 +49,6 @@
             padding: 35px 30px;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
         }
-
 
         .header {
             text-align: center;
@@ -86,7 +83,6 @@
             padding: 16px;
             margin-bottom: 25px;
         }
-
 
         .location-controls {
             display: flex;
@@ -427,14 +423,18 @@
                     throw new Error(data.error || "Failed to fetch weather from backend.");
                 }
 
-                // Auto-fill form fields
-                if (data.weather) {
-                    document.getElementById('humidity').value = data.weather.humidity;
-                    document.getElementById('pressure').value = data.weather.pressure;
-                    document.getElementById('rainfall').value = data.weather.rainfall;
-                    document.getElementById('min_temp').value = data.weather.min_temp;
-                    document.getElementById('max_temp').value = data.weather.max_temp;
-                }
+                // Auto-fill form fields strictly using exact returned weather metrics
+                const rainfallVal = (data.weather && data.weather.rainfall !== undefined) ? data.weather.rainfall : (data.rainfall !== undefined ? data.rainfall : 0.0);
+                const humidityVal = (data.weather && data.weather.humidity !== undefined) ? data.weather.humidity : (data.humidity !== undefined ? data.humidity : 0.0);
+                const pressureVal = (data.weather && data.weather.pressure !== undefined) ? data.weather.pressure : (data.pressure !== undefined ? data.pressure : 0.0);
+                const minTempVal = (data.weather && data.weather.min_temp !== undefined) ? data.weather.min_temp : (data.min_temp !== undefined ? data.min_temp : 0.0);
+                const maxTempVal = (data.weather && data.weather.max_temp !== undefined) ? data.weather.max_temp : (data.max_temp !== undefined ? data.max_temp : 0.0);
+
+                document.getElementById('humidity').value = humidityVal;
+                document.getElementById('pressure').value = pressureVal;
+                document.getElementById('rainfall').value = rainfallVal;
+                document.getElementById('min_temp').value = minTempVal;
+                document.getElementById('max_temp').value = maxTempVal;
 
                 // Display Location metadata
                 const label = regionLabel || `Location (${latitude.toFixed(2)}, ${longitude.toFixed(2)})`;

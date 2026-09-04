@@ -182,8 +182,8 @@ def fetch_weather():
         url = (
             f"https://api.open-meteo.com/v1/forecast?"
             f"latitude={lat}&longitude={lon}"
-            f"&current=relative_humidity_2m,surface_pressure,precipitation,temperature_2m"
-            f"&daily=temperature_2m_max,temperature_2m_min"
+            f"&current=relative_humidity_2m,surface_pressure,temperature_2m"
+            f"&daily=temperature_2m_max,temperature_2m_min,precipitation_sum"
             f"&timezone=auto"
         )
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -195,14 +195,20 @@ def fetch_weather():
 
         humidity = round(float(current.get("relative_humidity_2m", 70.0)), 1)
         pressure = round(float(current.get("surface_pressure", 1013.25)), 1)
-        rainfall = round(float(current.get("precipitation", 0.0)), 1)
         current_temp = round(float(current.get("temperature_2m", 25.0)), 1)
 
         max_temp_list = daily.get("temperature_2m_max", [])
         min_temp_list = daily.get("temperature_2m_min", [])
+        precip_list = daily.get("precipitation_sum", [])
 
-        max_temp = round(float(max_temp_list[0]), 1) if max_temp_list else round(current_temp + 5.0, 1)
-        min_temp = round(float(min_temp_list[0]), 1) if min_temp_list else round(current_temp - 5.0, 1)
+        max_temp = round(float(max_temp_list[0]), 1) if max_temp_list and max_temp_list[0] is not None else round(current_temp + 5.0, 1)
+        min_temp = round(float(min_temp_list[0]), 1) if min_temp_list and min_temp_list[0] is not None else round(current_temp - 5.0, 1)
+
+        # Extract daily precipitation_sum accurately
+        if precip_list and len(precip_list) > 0 and precip_list[0] is not None:
+            rainfall = round(float(precip_list[0]), 1)
+        else:
+            rainfall = 0.0
 
         status, level, probability = process_and_predict(humidity, pressure, min_temp, max_temp, rainfall)
 
