@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Rainfall & Inundation Warning System</title>
+    <!-- Google Fonts & FontAwesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-accent: #38bdf8;
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+            --card-bg: rgba(255, 255, 255, 0.07);
+            --card-border: rgba(255, 255, 255, 0.15);
+            --input-bg: rgba(15, 23, 42, 0.65);
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-light);
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--card-bg);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 35px 30px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .header i {
+            font-size: 3rem;
+            background: linear-gradient(45deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .header h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Location Toolbar & Search Bar */
+        .location-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 25px;
+        }
+
+        .location-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            display: flex;
+        }
+
+        .search-box input {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px 0 0 12px;
+            padding: 10px 14px;
+            color: #fff;
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
+        }
+
+        .search-box button {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border: none;
+            border-radius: 0 12px 12px 0;
+            padding: 0 16px;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .search-box button:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        }
+
+        .btn-location {
+            background: linear-gradient(135deg, #0d9488 0%, #059669 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 10px 14px;
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+        }
+
+        .btn-location:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(13, 148, 136, 0.4);
+        }
+
+        /* Location Metadata Badge */
+        .location-badge {
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 0.82rem;
+            color: #7dd3fc;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .location-badge i {
+            color: #38bdf8;
+        }
+
+        /* Form Inputs */
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group.full-width {
+            grid-column: span 2;
+        }
+
+        .input-group label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #cbd5e1;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .input-group label i {
+            color: var(--primary-accent);
+        }
+
+        .input-field {
+            background: var(--input-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 10px 14px;
+            color: #fff;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+        }
+
+        .btn-predict {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-predict:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(59, 130, 246, 0.6);
+        }
+
+        .btn-predict:active {
+            transform: translateY(0);
+        }
+
+        /* Result Alert Container */
+        #result {
+            margin-top: 25px;
+            padding: 18px;
+            border-radius: 14px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: none;
+            animation: fadeIn 0.4s ease-in-out forwards;
+        }
+
+        #result.loading {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        #result.red {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #fca5a5;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+        }
+
+        #result.green {
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid rgba(34, 197, 94, 0.5);
+            color: #86efac;
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+        }
+
+        #result.warning {
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid rgba(245, 158, 11, 0.5);
+            color: #fde68a;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 500px) {
+            .location-controls {
+                flex-direction: column;
+            }
+
+            .search-box input {
+                border-radius: 12px 0 0 12px;
+            }
+
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .input-group.full-width {
+                grid-column: span 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header">
+            <i class="fa-solid fa-cloud-showers-heavy"></i>
+            <h1>Early Warning System</h1>
+            <p>AI/ML Heavy Rainfall & Inundation Risk Prediction</p>
+        </div>
+
+        <!-- Automated Data Collection Section -->
+        <div class="location-section">
+            <div class="location-controls">
+                <div class="search-box">
+                    <input type="text" id="city-input" placeholder="Search city worldwide (e.g. Hyderabad)..." onkeypress="handleSearchKeyPress(event)">
+                    <button id="btn-city-search" onclick="searchCity()" title="Search City">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                </div>
+                <button id="btn-location" class="btn-location" onclick="useCurrentLocation()">
+                    <i class="fa-solid fa-location-crosshairs"></i> GPS Location
+                </button>
+            </div>
+
+            <div id="location-badge" class="location-badge" style="display: none;">
+                <i class="fa-solid fa-location-dot"></i>
+                <span id="location-text">Detected Region: Not Selected</span>
+            </div>
+        </div>
+
+        <!-- Weather Features Form (Auto-filled / Manual Overrides) -->
+        <div class="input-grid">
+            <div class="input-group">
+                <label><i class="fa-solid fa-droplet"></i> Humidity (%)</label>
+                <input type="number" step="any" id="humidity" class="input-field" value="85" placeholder="e.g. 85">
+            </div>
+
+            <div class="input-group">
+                <label><i class="fa-solid fa-gauge"></i> Pressure (hPa)</label>
+                <input type="number" step="any" id="pressure" class="input-field" value="1005" placeholder="e.g. 1005">
+            </div>
+
+            <div class="input-group">
+                <label><i class="fa-solid fa-temperature-low"></i> Min Temp (°C)</label>
+                <input type="number" step="any" id="min_temp" class="input-field" value="18" placeholder="e.g. 18">
+            </div>
+
+            <div class="input-group">
+                <label><i class="fa-solid fa-temperature-high"></i> Max Temp (°C)</label>
+                <input type="number" step="any" id="max_temp" class="input-field" value="28" placeholder="e.g. 28">
+            </div>
+
+            <div class="input-group full-width">
+                <label><i class="fa-solid fa-cloud-rain"></i> Recent Rainfall (mm)</label>
+                <input type="number" step="any" id="rainfall" class="input-field" value="12" placeholder="e.g. 12">
+            </div>
+        </div>
+
+        <button class="btn-predict" id="btn-predict" onclick="sendManualData()">
+            <i class="fa-solid fa-bolt"></i> Run AI Prediction
+        </button>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function showLoading(message) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'loading';
+            resultDiv.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ${message}`;
+        }
+
+        function showResult(status, level) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            if (level === 'Red') {
+                resultDiv.className = 'red';
+                resultDiv.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${status}`;
+            } else if (level === 'Green') {
+                resultDiv.className = 'green';
+                resultDiv.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${status}`;
+            } else {
+                resultDiv.className = 'warning';
+                resultDiv.innerHTML = `<i class="fa-solid fa-circle-info"></i> ${status}`;
+            }
+        }
+
+        function setLocationBadge(regionName, lat, lon) {
+            const badge = document.getElementById('location-badge');
+            const textSpan = document.getElementById('location-text');
+            textSpan.textContent = `Detected Region: ${regionName} [${lat.toFixed(2)}, ${lon.toFixed(2)}]`;
+            badge.style.display = 'flex';
+        }
+
+        // Fetch Live Weather & Predict via Backend /fetch_weather
+        async function fetchWeatherData(latitude, longitude, regionLabel = null) {
+            showLoading("Connecting to Open-Meteo & retrieving live satellite data...");
+
+            try {
+                const response = await fetch('/fetch_weather', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ latitude: latitude, longitude: longitude })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || data.error) {
+                    throw new Error(data.error || "Failed to fetch weather from backend.");
+                }
+
+                // Auto-fill form fields
+                if (data.weather) {
+                    document.getElementById('humidity').value = data.weather.humidity;
+                    document.getElementById('pressure').value = data.weather.pressure;
+                    document.getElementById('rainfall').value = data.weather.rainfall;
+                    document.getElementById('min_temp').value = data.weather.min_temp;
+                    document.getElementById('max_temp').value = data.weather.max_temp;
+                }
+
+                // Display Location metadata
+                const label = regionLabel || `Location (${latitude.toFixed(2)}, ${longitude.toFixed(2)})`;
+                setLocationBadge(label, latitude, longitude);
+
+                // Display ML prediction result
+                showResult(data.status, data.level);
+
+            } catch (err) {
+                console.error(err);
+                showResult(`Weather Fetch Warning: ${err.message}. You can still adjust values manually and predict.`, 'Warning');
+            }
+        }
+
+        // HTML5 Geolocation Handler
+        function useCurrentLocation() {
+            if (!navigator.geolocation) {
+                showResult("Geolocation is not supported by your browser. Please search for a city instead.", 'Warning');
+                return;
+            }
+
+            showLoading("Acquiring GPS coordinates...");
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    fetchWeatherData(lat, lon, "Your GPS Location");
+                },
+                (error) => {
+                    let errorMsg = "Unable to retrieve location.";
+                    if (error.code === error.PERMISSION_DENIED) {
+                        errorMsg = "Location permission denied. Please search for a city or enter values manually.";
+                    } else if (error.code === error.POSITION_UNAVAILABLE) {
+                        errorMsg = "Location information unavailable.";
+                    } else if (error.code === error.TIMEOUT) {
+                        errorMsg = "Location request timed out.";
+                    }
+                    showResult(errorMsg, 'Warning');
+                },
+                { timeout: 10000, enableHighAccuracy: true }
+            );
+        }
+
+        // City Search Handler using Open-Meteo Geocoding API
+        async function searchCity() {
+            const query = document.getElementById('city-input').value.trim();
+            if (!query) {
+                showResult("Please enter a city name to search.", 'Warning');
+                return;
+            }
+
+            showLoading(`Searching location coordinates for "${query}"...`);
+
+            try {
+                const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=en&format=json`;
+                const res = await fetch(geoUrl);
+                const geoData = await res.json();
+
+                if (!geoData.results || geoData.results.length === 0) {
+                    showResult(`No location found matching "${query}". Check spelling or try another city.`, 'Warning');
+                    return;
+                }
+
+                const topMatch = geoData.results[0];
+                const lat = topMatch.latitude;
+                const lon = topMatch.longitude;
+                const cityName = topMatch.name;
+                const country = topMatch.country ? `, ${topMatch.country}` : '';
+                const regionName = `${cityName}${country}`;
+
+                fetchWeatherData(lat, lon, regionName);
+
+            } catch (err) {
+                console.error(err);
+                showResult("Failed to query Open-Meteo Geocoding API. Check network connection.", 'Warning');
+            }
+        }
+
+        function handleSearchKeyPress(event) {
+            if (event.key === 'Enter') {
+                searchCity();
+            }
+        }
+
+        // Manual Prediction Submission (/predict)
+        async function sendManualData() {
+            showLoading("Analyzing inputs with scikit-learn model...");
+
+            const payload = {
+                humidity: document.getElementById('humidity').value,
+                pressure: document.getElementById('pressure').value,
+                min_temp: document.getElementById('min_temp').value,
+                max_temp: document.getElementById('max_temp').value,
+                rainfall: document.getElementById('rainfall').value
+            };
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.status || "Prediction failed.");
+                }
+
+                showResult(result.status, result.level);
+
+            } catch (error) {
+                console.error(error);
+                showResult("Error connecting to Flask backend.", 'Red');
+            }
+        }
+    </script>
+</body>
+
+</html>
