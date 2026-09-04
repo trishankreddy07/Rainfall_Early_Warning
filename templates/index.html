@@ -42,7 +42,7 @@
 
         .container {
             width: 100%;
-            max-width: 650px;
+            max-width: 680px;
             background: var(--card-bg);
             backdrop-filter: blur(18px);
             -webkit-backdrop-filter: blur(18px);
@@ -55,6 +55,7 @@
         .header {
             text-align: center;
             margin-bottom: 20px;
+            position: relative;
         }
 
         .header i {
@@ -77,7 +78,7 @@
             margin-top: 4px;
         }
 
-        /* Live Location & Time Banner */
+        /* Live Location & Time Banner with i18n Selector */
         .live-banner {
             background: rgba(15, 23, 42, 0.55);
             border: 1px solid rgba(56, 189, 248, 0.25);
@@ -88,7 +89,7 @@
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 10px;
         }
 
         .banner-item {
@@ -116,6 +117,18 @@
             padding: 3px 8px;
             border-radius: 6px;
             border: 1px solid rgba(244, 63, 94, 0.25);
+        }
+
+        .lang-select {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--primary-accent);
+            border-radius: 8px;
+            color: #38bdf8;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 4px 8px;
+            outline: none;
+            cursor: pointer;
         }
 
         /* Location Toolbar & Search Bar */
@@ -165,10 +178,6 @@
             transition: background 0.3s ease;
         }
 
-        .search-box button:hover {
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-        }
-
         .btn-location {
             background: linear-gradient(135deg, #0d9488 0%, #059669 100%);
             border: none;
@@ -186,9 +195,33 @@
             box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
         }
 
-        .btn-location:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(13, 148, 136, 0.4);
+        /* Feature Cards */
+        .feature-card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 22px;
+        }
+
+        .feature-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .feature-card-header h3 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #f8fafc;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .feature-card-header h3 i {
+            color: var(--primary-accent);
         }
 
         /* Form Inputs */
@@ -238,6 +271,80 @@
             box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
         }
 
+        /* Soil Saturation Badge Card */
+        .soil-card {
+            background: rgba(13, 148, 136, 0.1);
+            border: 1px solid rgba(13, 148, 136, 0.3);
+            border-radius: 14px;
+            padding: 12px 16px;
+            margin-bottom: 22px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .soil-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .soil-title {
+            font-size: 0.78rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .soil-val {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #2dd4bf;
+        }
+
+        .soil-tag {
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 8px;
+        }
+
+        .soil-tag.Red { background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.5); color: #fca5a5; }
+        .soil-tag.Yellow { background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.5); color: #fde68a; }
+        .soil-tag.Green { background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.5); color: #86efac; }
+
+        /* Sliders */
+        .slider-group {
+            margin-bottom: 14px;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #cbd5e1;
+            margin-bottom: 6px;
+        }
+
+        .slider-header span.val {
+            color: #38bdf8;
+            font-family: monospace;
+        }
+
+        .range-slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.15);
+            outline: none;
+            cursor: pointer;
+            accent-color: #38bdf8;
+        }
+
+        /* Action Buttons */
         .btn-predict {
             width: 100%;
             padding: 14px;
@@ -261,6 +368,22 @@
             box-shadow: 0 12px 25px rgba(59, 130, 246, 0.6);
         }
 
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #e2e8f0;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
         /* Result Alert Container */
         #result {
             margin-top: 20px;
@@ -273,106 +396,49 @@
             animation: fadeIn 0.4s ease-in-out forwards;
         }
 
-        #result.loading {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #fff;
-        }
-
-        #result.red {
-            background: rgba(239, 68, 68, 0.2);
-            border: 1px solid rgba(239, 68, 68, 0.5);
-            color: #fca5a5;
-            box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
-        }
-
-        #result.green {
-            background: rgba(34, 197, 94, 0.2);
-            border: 1px solid rgba(34, 197, 94, 0.5);
-            color: #86efac;
-            box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
-        }
-
-        #result.warning {
-            background: rgba(245, 158, 11, 0.2);
-            border: 1px solid rgba(245, 158, 11, 0.5);
-            color: #fde68a;
-        }
+        #result.loading { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); color: #fff; }
+        #result.red { background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.5); color: #fca5a5; box-shadow: 0 0 20px rgba(239, 68, 68, 0.2); }
+        #result.green { background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.5); color: #86efac; box-shadow: 0 0 20px rgba(34, 197, 94, 0.2); }
+        #result.warning { background: rgba(245, 158, 11, 0.2); border: 1px solid rgba(245, 158, 11, 0.5); color: #fde68a; }
 
         /* Chart Section */
-        .chart-card {
-            margin-top: 25px;
-            background: rgba(15, 23, 42, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 16px;
-            padding: 18px;
-            animation: fadeIn 0.4s ease-in-out;
-        }
-
-        .chart-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .chart-header h3 {
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: #f8fafc;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .chart-header h3 i {
-            color: #38bdf8;
-        }
-
-        .chart-subtitle {
-            font-size: 0.78rem;
-            color: var(--text-muted);
-        }
-
         .chart-wrapper {
             position: relative;
             width: 100%;
-            height: 250px;
+            height: 240px;
+        }
+
+        /* Advisory & Photo Upload Boxes */
+        .advisory-box {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 14px;
+            margin-top: 10px;
+            font-size: 0.88rem;
+            line-height: 1.5;
+        }
+
+        .photo-preview-img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 12px;
+            border: 1px solid var(--card-border);
+            margin-top: 10px;
+            display: none;
         }
 
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         @media (max-width: 500px) {
-            .location-controls {
-                flex-direction: column;
-            }
-
-            .search-box input {
-                border-radius: 12px 0 0 12px;
-            }
-
-            .input-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .input-group.full-width {
-                grid-column: span 1;
-            }
-
-            .live-banner {
-                flex-direction: column;
-                align-items: flex-start;
-            }
+            .location-controls { flex-direction: column; }
+            .input-grid { grid-template-columns: 1fr; }
+            .input-group.full-width { grid-column: span 1; }
+            .live-banner { flex-direction: column; align-items: flex-start; }
+            .soil-card { flex-direction: column; align-items: flex-start; }
         }
     </style>
 </head>
@@ -380,26 +446,32 @@
 <body>
 
     <div class="container">
+        <!-- Header -->
         <div class="header">
             <i class="fa-solid fa-cloud-showers-heavy"></i>
-            <h1>Early Warning System</h1>
-            <p>AI/ML Heavy Rainfall & Inundation Risk Prediction</p>
+            <h1 id="lbl-title">Early Warning System</h1>
+            <p id="lbl-subtitle">AI/ML Heavy Rainfall & Inundation Risk Prediction</p>
         </div>
 
-        <!-- Live Location & Time Banner -->
+        <!-- Live Location, Clock & Multilingual Selector Banner -->
         <div class="live-banner">
             <div class="banner-item">
                 <i class="fa-solid fa-location-dot"></i>
                 <span id="banner-location" class="banner-location">📍 Region: Hyderabad, India</span>
                 <span id="banner-coords" style="color: #94a3b8; font-size: 0.78rem;">[17.38, 78.48]</span>
             </div>
-            <div class="banner-item">
-                <i class="fa-solid fa-clock"></i>
+            <div class="banner-item" style="gap: 12px;">
                 <span id="live-clock" class="banner-time">00:00:00 AM</span>
+                <select id="lang-select" class="lang-select" onchange="switchLanguage(this.value)">
+                    <option value="en">🌐 English</option>
+                    <option value="hi">🇮🇳 हिन्दी (Hindi)</option>
+                    <option value="te">🇮🇳 తెలుగు (Telugu)</option>
+                    <option value="ta">🇮🇳 தமிழ் (Tamil)</option>
+                </select>
             </div>
         </div>
 
-        <!-- Automated Data Collection Section -->
+        <!-- Location Search Bar -->
         <div class="location-section">
             <div class="location-controls">
                 <div class="search-box">
@@ -410,59 +482,234 @@
                     </button>
                 </div>
                 <button id="btn-location" class="btn-location" onclick="useCurrentLocation()">
-                    <i class="fa-solid fa-location-crosshairs"></i> GPS Location
+                    <i class="fa-solid fa-location-crosshairs"></i> <span id="lbl-gps-btn">GPS Location</span>
                 </button>
             </div>
+        </div>
+
+        <!-- Soil Saturation & Runoff Index Badge Card -->
+        <div class="soil-card" id="soil-card">
+            <div class="soil-info">
+                <span class="soil-title" id="lbl-soil-title">Soil Saturation & Runoff Index</span>
+                <span class="soil-val" id="soil-val">0.32 m³/m³ (71.1% Saturation)</span>
+            </div>
+            <div class="soil-tag Yellow" id="soil-tag">MODERATE SATURATION: Absorptive Ground</div>
         </div>
 
         <!-- Weather Features Form (Auto-filled / Manual Overrides) -->
         <div class="input-grid">
             <div class="input-group">
-                <label><i class="fa-solid fa-droplet"></i> Humidity (%)</label>
+                <label><i class="fa-solid fa-droplet"></i> <span id="lbl-humidity">Humidity (%)</span></label>
                 <input type="number" step="any" id="humidity" class="input-field" value="85" placeholder="e.g. 85">
             </div>
 
             <div class="input-group">
-                <label><i class="fa-solid fa-gauge"></i> Pressure (hPa)</label>
+                <label><i class="fa-solid fa-gauge"></i> <span id="lbl-pressure">Pressure (hPa)</span></label>
                 <input type="number" step="any" id="pressure" class="input-field" value="1005" placeholder="e.g. 1005">
             </div>
 
             <div class="input-group">
-                <label><i class="fa-solid fa-temperature-low"></i> Min Temp (°C)</label>
+                <label><i class="fa-solid fa-temperature-low"></i> <span id="lbl-mintemp">Min Temp (°C)</span></label>
                 <input type="number" step="any" id="min_temp" class="input-field" value="18" placeholder="e.g. 18">
             </div>
 
             <div class="input-group">
-                <label><i class="fa-solid fa-temperature-high"></i> Max Temp (°C)</label>
+                <label><i class="fa-solid fa-temperature-high"></i> <span id="lbl-maxtemp">Max Temp (°C)</span></label>
                 <input type="number" step="any" id="max_temp" class="input-field" value="28" placeholder="e.g. 28">
             </div>
 
             <div class="input-group full-width">
-                <label><i class="fa-solid fa-cloud-rain"></i> Recent Rainfall (mm)</label>
+                <label><i class="fa-solid fa-cloud-rain"></i> <span id="lbl-rainfall">Recent Rainfall (mm)</span></label>
                 <input type="number" step="any" id="rainfall" class="input-field" value="12" placeholder="e.g. 12">
             </div>
         </div>
 
         <button class="btn-predict" id="btn-predict" onclick="sendManualData()">
-            <i class="fa-solid fa-bolt"></i> Run AI Prediction
+            <i class="fa-solid fa-bolt"></i> <span id="lbl-predict-btn">Run AI Prediction</span>
         </button>
 
         <div id="result"></div>
 
         <!-- 24-Hour Risk Trajectory Chart Section -->
-        <div id="chart-card" class="chart-card" style="display: none;">
-            <div class="chart-header">
-                <h3><i class="fa-solid fa-chart-line"></i> 24-Hour Risk Trajectory</h3>
-                <span id="chart-subtitle" class="chart-subtitle">Hourly Risk Forecast</span>
+        <div id="chart-card" class="feature-card" style="display: none;">
+            <div class="feature-card-header">
+                <h3><i class="fa-solid fa-chart-line"></i> <span id="lbl-chart-title">24-Hour Risk Trajectory</span></h3>
+                <span id="chart-subtitle" style="font-size:0.78rem; color:var(--text-muted);">Hourly Risk Forecast</span>
             </div>
             <div class="chart-wrapper">
                 <canvas id="hourlyRiskChart"></canvas>
             </div>
         </div>
+
+        <!-- Interactive "What-If" Climate Escalation Sliders Panel -->
+        <div class="feature-card">
+            <div class="feature-card-header">
+                <h3><i class="fa-solid fa-sliders"></i> <span id="lbl-whatif-title">Interactive Climate Escalation Simulator</span></h3>
+                <button class="btn-secondary" onclick="resetSliders()"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span>🌧️ Rainfall Escalation</span>
+                    <span class="val" id="val-slider-rainfall">+0 mm</span>
+                </div>
+                <input type="range" id="slider-rainfall" class="range-slider" min="0" max="100" value="0" step="1" oninput="onSliderInput()">
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span>📉 Pressure Drop</span>
+                    <span class="val" id="val-slider-pressure">-0 hPa</span>
+                </div>
+                <input type="range" id="slider-pressure" class="range-slider" min="0" max="20" value="0" step="1" oninput="onSliderInput()">
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span>💧 Humidity Spike</span>
+                    <span class="val" id="val-slider-humidity">+0 %</span>
+                </div>
+                <input type="range" id="slider-humidity" class="range-slider" min="0" max="20" value="0" step="1" oninput="onSliderInput()">
+            </div>
+        </div>
+
+        <!-- Agricultural Crop Submergence & Harvest Advisor -->
+        <div class="feature-card">
+            <div class="feature-card-header">
+                <h3><i class="fa-solid fa-seedling"></i> <span id="lbl-crop-title">Agricultural Crop Submergence Advisor</span></h3>
+            </div>
+
+            <div class="input-group" style="margin-bottom: 10px;">
+                <label><i class="fa-solid fa-wheat-awn"></i> Select Crop Type</label>
+                <select id="crop-select" class="input-field" onchange="evaluateCropAdvisory()">
+                    <option value="paddy">🌾 Paddy / Rice (High Tolerance)</option>
+                    <option value="cotton">🌱 Cotton (Low Tolerance)</option>
+                    <option value="maize">🌽 Maize (Low Tolerance)</option>
+                    <option value="vegetables">🥦 Vegetables (Very Low Tolerance)</option>
+                    <option value="sugarcane">🎋 Sugarcane (Moderate Tolerance)</option>
+                </select>
+            </div>
+
+            <div id="crop-advisory-box" class="advisory-box">
+                <i class="fa-solid fa-circle-info" style="color: #38bdf8;"></i> Select crop type to evaluate flood submergence & harvest risk.
+            </div>
+        </div>
+
+        <!-- Crowdsourced Photo Flood Estimator -->
+        <div class="feature-card">
+            <div class="feature-card-header">
+                <h3><i class="fa-solid fa-camera"></i> <span id="lbl-photo-title">Crowdsourced Flood Photo Estimator (AI Vision)</span></h3>
+            </div>
+
+            <div class="input-group" style="margin-bottom: 12px;">
+                <label><i class="fa-solid fa-upload"></i> Upload Ground Flood Photo</label>
+                <input type="file" id="photo-input" class="input-field" accept="image/*" onchange="previewPhoto(event)">
+            </div>
+
+            <img id="photo-preview" class="photo-preview-img" alt="Flood Photo Preview">
+
+            <button class="btn-predict" id="btn-analyze-photo" onclick="uploadFloodPhoto()" style="margin-top: 12px; display: none;">
+                <i class="fa-solid fa-eye"></i> Analyze Flood Depth
+            </button>
+
+            <div id="photo-result" class="advisory-box" style="display: none; margin-top: 12px;"></div>
+        </div>
     </div>
 
     <script>
         let riskChart = null;
+        let baseWeatherData = { humidity: 85, pressure: 1005, rainfall: 12, min_temp: 18, max_temp: 28, soil_moisture: 0.30 };
+        let currentLang = 'en';
+
+        // Multilingual i18n Dictionary
+        const i18nDict = {
+            en: {
+                title: "Early Warning System",
+                subtitle: "AI/ML Heavy Rainfall & Inundation Risk Prediction",
+                gpsBtn: "GPS Location",
+                soilTitle: "Soil Saturation & Runoff Index",
+                humidity: "Humidity (%)",
+                pressure: "Pressure (hPa)",
+                minTemp: "Min Temp (°C)",
+                maxTemp: "Max Temp (°C)",
+                rainfall: "Recent Rainfall (mm)",
+                predictBtn: "Run AI Prediction",
+                chartTitle: "24-Hour Risk Trajectory",
+                whatifTitle: "Interactive Climate Escalation Simulator",
+                cropTitle: "Agricultural Crop Submergence Advisor",
+                photoTitle: "Crowdsourced Flood Photo Estimator (AI Vision)"
+            },
+            hi: {
+                title: "भारी वर्षा पूर्वावलोकन प्रणाली",
+                subtitle: "एआई/एमएल बाढ़ और भारी बारिश जोखिम पूर्वानुमान",
+                gpsBtn: "जीपीएस स्थान",
+                soilTitle: "मृदा संतृप्ति और अपवाह सूचकांक",
+                humidity: "आर्द्रता (%)",
+                pressure: "वायुमंडलीय दबाव (hPa)",
+                minTemp: "न्यूनतम तापमान (°C)",
+                maxTemp: "अधिकतम तापमान (°C)",
+                rainfall: "हाल की वर्षा (मिमी)",
+                predictBtn: "एआई पूर्वानुमान चलाएं",
+                chartTitle: "24-घंटे का जोखिम प्रक्षेपवक्र",
+                whatifTitle: "इंटरएक्टिव जलवायु अनुकरणकर्ता",
+                cropTitle: "कृषि फसल जलमग्नता और कटाई सलाहकार",
+                photoTitle: "बाढ़ फोटो गहराई विश्लेषक"
+            },
+            te: {
+                title: "భారీ వర్షపాత ముందస్తు హెచ్చరిక వ్యవస్థ",
+                subtitle: "AI/ML ప్రాతిపదికన వరదలు మరియు వర్షపాతం అంచనా",
+                gpsBtn: "GPS నగర స్థానం",
+                soilTitle: "నేల సంతృప్తత మరియు ప్రవాహ సూచిక",
+                humidity: "తేమ శాతం (%)",
+                pressure: "పీడనం (hPa)",
+                minTemp: "కనిష్ట ఉష్ణోగ్రత (°C)",
+                maxTemp: "గరిష్ట ఉష్ణోగ్రత (°C)",
+                rainfall: "ఇటీవలి వర్షపాతం (mm)",
+                predictBtn: "AI అంచనాను ప్రారంభించండి",
+                chartTitle: "24-గంటల ప్రమాద పటం",
+                whatifTitle: "వాతావరణ మార్పుల సిమ్యులేటర్",
+                cropTitle: "వ్యవసాయ పంటల ముంపు సలహాదారు",
+                photoTitle: "వరద ఫోటో లోతు విశ్లేషణ"
+            },
+            ta: {
+                title: "கனமழை முன்னெச்சரிக்கை அமைப்பு",
+                subtitle: "AI/ML வெள்ள அபாய முன்னறிவிப்பு",
+                gpsBtn: "GPS இருப்பிடம்",
+                soilTitle: "மண் ஈரப்பதம் மற்றும் வழிந்தோடு குறியீடு",
+                humidity: "ஈரப்பதம் (%)",
+                pressure: "காற்றழுத்தம் (hPa)",
+                minTemp: "குறைந்தபட்ச வெப்பநிலை (°C)",
+                maxTemp: "அதிகபட்ச வெப்பநிலை (°C)",
+                rainfall: "சமீபத்திய மழைப்பொழிவு (mm)",
+                predictBtn: "AI கணிப்பை இயக்கவும்",
+                chartTitle: "24-மணிநேர இடர் வரைபடம்",
+                whatifTitle: "காலநிலை உருவகப்படுத்துதல்",
+                cropTitle: "விவசாய பயிர் மூழ்கல் ஆலோசகர்",
+                photoTitle: "வெள்ள புகைப்பட ஆழம் பகுப்பாய்வு"
+            }
+        };
+
+        function switchLanguage(lang) {
+            currentLang = lang;
+            const dict = i18nDict[lang] || i18nDict.en;
+
+            document.getElementById('lbl-title').textContent = dict.title;
+            document.getElementById('lbl-subtitle').textContent = dict.subtitle;
+            document.getElementById('lbl-gps-btn').textContent = dict.gpsBtn;
+            document.getElementById('lbl-soil-title').textContent = dict.soilTitle;
+            document.getElementById('lbl-humidity').textContent = dict.humidity;
+            document.getElementById('lbl-pressure').textContent = dict.pressure;
+            document.getElementById('lbl-mintemp').textContent = dict.minTemp;
+            document.getElementById('lbl-maxtemp').textContent = dict.maxTemp;
+            document.getElementById('lbl-rainfall').textContent = dict.rainfall;
+            document.getElementById('lbl-predict-btn').textContent = dict.predictBtn;
+            document.getElementById('lbl-chart-title').textContent = dict.chartTitle;
+            document.getElementById('lbl-whatif-title').textContent = dict.whatifTitle;
+            document.getElementById('lbl-crop-title').textContent = dict.cropTitle;
+            document.getElementById('lbl-photo-title').textContent = dict.photoTitle;
+
+            evaluateCropAdvisory();
+        }
 
         // Live Clock Ticking Function
         function updateLiveClock() {
@@ -502,6 +749,14 @@
             document.getElementById('banner-coords').textContent = `[${lat.toFixed(2)}, ${lon.toFixed(2)}]`;
         }
 
+        function updateSoilDisplay(sm, satPct, riskText, riskColor) {
+            const soilVal = document.getElementById('soil-val');
+            const soilTag = document.getElementById('soil-tag');
+            soilVal.textContent = `${sm} m³/m³ (${satPct}% Saturation)`;
+            soilTag.textContent = riskText;
+            soilTag.className = `soil-tag ${riskColor}`;
+        }
+
         // Render 24-Hour Chart via Chart.js
         function renderRiskChart(trajectory) {
             const chartCard = document.getElementById('chart-card');
@@ -513,7 +768,6 @@
             const labels = trajectory.map(item => item.time);
             const probabilities = trajectory.map(item => item.probability);
 
-            // Dynamic Gradient fill
             const gradient = ctx.createLinearGradient(0, 0, 0, 220);
             const maxProb = Math.max(...probabilities);
 
@@ -579,9 +833,7 @@
                             borderColor: 'rgba(255, 255, 255, 0.2)',
                             borderWidth: 1,
                             callbacks: {
-                                label: function (context) {
-                                    return ` Risk: ${context.parsed.y}%`;
-                                }
+                                label: function (context) { return ` Risk: ${context.parsed.y}%`; }
                             }
                         }
                     }
@@ -591,7 +843,7 @@
 
         // Fetch Live Weather & Predict via Backend /fetch_weather
         async function fetchWeatherData(latitude, longitude, regionLabel = null) {
-            showLoading("Connecting to Open-Meteo & retrieving live satellite data...");
+            showLoading("Connecting to Open-Meteo & retrieving live satellite telemetry...");
 
             try {
                 const response = await fetch('/fetch_weather', {
@@ -610,30 +862,43 @@
                     throw new Error(data.error || "Failed to fetch weather from backend.");
                 }
 
-                // Auto-fill form fields using returned weather metrics
-                const rainfallVal = (data.weather && data.weather.rainfall !== undefined) ? data.weather.rainfall : (data.rainfall !== undefined ? data.rainfall : 0.0);
-                const humidityVal = (data.weather && data.weather.humidity !== undefined) ? data.weather.humidity : (data.humidity !== undefined ? data.humidity : 0.0);
-                const pressureVal = (data.weather && data.weather.pressure !== undefined) ? data.weather.pressure : (data.pressure !== undefined ? data.pressure : 0.0);
-                const minTempVal = (data.weather && data.weather.min_temp !== undefined) ? data.weather.min_temp : (data.min_temp !== undefined ? data.min_temp : 0.0);
-                const maxTempVal = (data.weather && data.weather.max_temp !== undefined) ? data.weather.max_temp : (data.max_temp !== undefined ? data.max_temp : 0.0);
+                // Store base weather data for What-If simulator
+                baseWeatherData.humidity = data.weather ? data.weather.humidity : data.humidity;
+                baseWeatherData.pressure = data.weather ? data.weather.pressure : data.pressure;
+                baseWeatherData.rainfall = data.weather ? data.weather.rainfall : data.rainfall;
+                baseWeatherData.min_temp = data.weather ? data.weather.min_temp : data.min_temp;
+                baseWeatherData.max_temp = data.weather ? data.weather.max_temp : data.max_temp;
+                baseWeatherData.soil_moisture = data.soil_moisture || 0.30;
 
-                document.getElementById('humidity').value = humidityVal;
-                document.getElementById('pressure').value = pressureVal;
-                document.getElementById('rainfall').value = rainfallVal;
-                document.getElementById('min_temp').value = minTempVal;
-                document.getElementById('max_temp').value = maxTempVal;
+                // Auto-fill form fields
+                document.getElementById('humidity').value = baseWeatherData.humidity;
+                document.getElementById('pressure').value = baseWeatherData.pressure;
+                document.getElementById('rainfall').value = baseWeatherData.rainfall;
+                document.getElementById('min_temp').value = baseWeatherData.min_temp;
+                document.getElementById('max_temp').value = baseWeatherData.max_temp;
 
-                // Update Header Banner dynamically with returned resolved location_name
+                // Update Soil Saturation Badge
+                if (data.soil_moisture !== undefined) {
+                    updateSoilDisplay(data.soil_moisture, data.saturation_pct, data.runoff_risk_level, data.runoff_color);
+                }
+
+                // Reset What-If Sliders
+                resetSlidersSilently();
+
+                // Update Header Banner
                 const finalLabel = data.location_name || regionLabel || `Location (${latitude.toFixed(2)}, ${longitude.toFixed(2)})`;
                 setBannerLocation(finalLabel, latitude, longitude);
 
                 // Display ML prediction result
                 showResult(data.status, data.level);
 
-                // Render 24-Hour Hourly Risk Chart if available
+                // Render 24-Hour Hourly Risk Chart
                 if (data.hourly_trajectory && data.hourly_trajectory.length > 0) {
                     renderRiskChart(data.hourly_trajectory);
                 }
+
+                // Evaluate Crop Advisory
+                evaluateCropAdvisory();
 
             } catch (err) {
                 console.error(err);
@@ -641,10 +906,175 @@
             }
         }
 
-        // HTML5 Geolocation Handler with Reverse Geocoding
+        // What-If Climate Escalation Simulator Handlers
+        function resetSlidersSilently() {
+            document.getElementById('slider-rainfall').value = 0;
+            document.getElementById('slider-pressure').value = 0;
+            document.getElementById('slider-humidity').value = 0;
+            document.getElementById('val-slider-rainfall').textContent = '+0 mm';
+            document.getElementById('val-slider-pressure').textContent = '-0 hPa';
+            document.getElementById('val-slider-humidity').textContent = '+0 %';
+        }
+
+        function resetSliders() {
+            resetSlidersSilently();
+            document.getElementById('humidity').value = baseWeatherData.humidity;
+            document.getElementById('pressure').value = baseWeatherData.pressure;
+            document.getElementById('rainfall').value = baseWeatherData.rainfall;
+            sendManualData();
+        }
+
+        async function onSliderInput() {
+            const addRain = parseInt(document.getElementById('slider-rainfall').value);
+            const dropPres = parseInt(document.getElementById('slider-pressure').value);
+            const spikeHum = parseInt(document.getElementById('slider-humidity').value);
+
+            document.getElementById('val-slider-rainfall').textContent = `+${addRain} mm`;
+            document.getElementById('val-slider-pressure').textContent = `-${dropPres} hPa`;
+            document.getElementById('val-slider-humidity').textContent = `+${spikeHum} %`;
+
+            const effHum = Math.min(100, Math.max(0, baseWeatherData.humidity + spikeHum));
+            const effPres = Math.max(800, baseWeatherData.pressure - dropPres);
+            const effRain = Math.max(0, baseWeatherData.rainfall + addRain);
+
+            document.getElementById('humidity').value = effHum;
+            document.getElementById('pressure').value = effPres;
+            document.getElementById('rainfall').value = effRain;
+
+            // Trigger real-time prediction
+            await sendManualData();
+            evaluateCropAdvisory();
+        }
+
+        // Agricultural Crop Submergence Advisor
+        function evaluateCropAdvisory() {
+            const cropType = document.getElementById('crop-select').value;
+            const currentRain = parseFloat(document.getElementById('rainfall').value) || 0;
+            const currentSat = baseWeatherData.soil_moisture || 0.30;
+            const box = document.getElementById('crop-advisory-box');
+
+            let riskRating = "LOW RISK";
+            let advisoryText = "";
+            let color = "#86efac";
+
+            if (cropType === 'paddy') {
+                if (currentRain > 100) {
+                    riskRating = "MODERATE CROP RISK";
+                    advisoryText = "Paddy handles submergence well, but extreme rainfall (>100mm) requires checking field drainage levees.";
+                    color = "#fde68a";
+                } else {
+                    riskRating = "SAFE CONDITIONS";
+                    advisoryText = "Paddy crops thrive in current moisture levels. Water depth within safe growth parameters.";
+                    color = "#86efac";
+                }
+            } else if (cropType === 'cotton') {
+                if (currentRain > 30 || currentSat > 0.35) {
+                    riskRating = "HIGH CROP DAMAGE RISK";
+                    advisoryText = "Cotton is highly sensitive to waterlogging. Drain standing water immediately to prevent root rot and boll drop.";
+                    color = "#fca5a5";
+                } else {
+                    riskRating = "SAFE CONDITIONS";
+                    advisoryText = "Soil aeration and moisture levels are safe for Cotton fields.";
+                    color = "#86efac";
+                }
+            } else if (cropType === 'maize') {
+                if (currentRain > 30 || currentSat > 0.35) {
+                    riskRating = "HIGH CROP DAMAGE RISK";
+                    advisoryText = "Maize roots suffer under prolonged saturation. Open drainage furrows immediately.";
+                    color = "#fca5a5";
+                } else {
+                    riskRating = "SAFE CONDITIONS";
+                    advisoryText = "Maize field soil conditions are optimal.";
+                    color = "#86efac";
+                }
+            } else if (cropType === 'vegetables') {
+                if (currentRain > 20 || currentSat > 0.32) {
+                    riskRating = "SEVERE CROP DAMAGE RISK";
+                    advisoryText = "Vegetable crops are extremely vulnerable to drowning. Harvest mature produce immediately & clear canal outlets.";
+                    color = "#fca5a5";
+                } else {
+                    riskRating = "SAFE CONDITIONS";
+                    advisoryText = "Normal vegetable plot moisture levels.";
+                    color = "#86efac";
+                }
+            } else if (cropType === 'sugarcane') {
+                if (currentRain > 70) {
+                    riskRating = "MODERATE CROP RISK";
+                    advisoryText = "Sugarcane tolerates short-term logging. Ensure main drainage channels are unobstructed.";
+                    color = "#fde68a";
+                } else {
+                    riskRating = "SAFE CONDITIONS";
+                    advisoryText = "Sugarcane crop water status is normal.";
+                    color = "#86efac";
+                }
+            }
+
+            box.innerHTML = `<strong style="color: ${color};"><i class="fa-solid fa-triangle-exclamation"></i> ${riskRating}:</strong> ${advisoryText}`;
+        }
+
+        // Crowdsourced Photo Flood Estimator (AI Vision)
+        function previewPhoto(event) {
+            const file = event.target.files[0];
+            const previewImg = document.getElementById('photo-preview');
+            const analyzeBtn = document.getElementById('btn-analyze-photo');
+            const resultBox = document.getElementById('photo-result');
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    previewImg.src = e.target.result;
+                    previewImg.style.display = 'block';
+                    analyzeBtn.style.display = 'flex';
+                    resultBox.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function uploadFloodPhoto() {
+            const input = document.getElementById('photo-input');
+            const resultBox = document.getElementById('photo-result');
+
+            if (!input.files || input.files.length === 0) return;
+
+            const formData = new FormData();
+            formData.append('file', input.files[0]);
+
+            resultBox.style.display = 'block';
+            resultBox.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Analyzing ground flood photo heuristics...';
+
+            try {
+                const response = await fetch('/analyze_flood_image', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || data.error) {
+                    throw new Error(data.error || "Image analysis failed.");
+                }
+
+                const color = data.level === 'Red' ? '#fca5a5' : '#86efac';
+                resultBox.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <strong style="color: ${color};"><i class="fa-solid fa-water"></i> Verified Tag: ${data.depth_tag}</strong>
+                        <span style="font-size:0.78rem; color:#94a3b8;">Depth: ~${data.depth_cm}cm</span>
+                    </div>
+                    <div style="color: #cbd5e1; font-size:0.85rem;"><strong>Rating:</strong> ${data.risk_rating}</div>
+                    <div style="color: #94a3b8; font-size:0.82rem; margin-top:4px;"><strong>Advice:</strong> ${data.advice}</div>
+                `;
+
+            } catch (err) {
+                console.error(err);
+                resultBox.innerHTML = `<span style="color: #f87171;"><i class="fa-solid fa-xmark"></i> ${err.message}</span>`;
+            }
+        }
+
+        // HTML5 Geolocation Handler
         async function useCurrentLocation() {
             if (!navigator.geolocation) {
-                showResult("Geolocation is not supported by your browser. Please search for a city instead.", 'Warning');
+                showResult("Geolocation is not supported by your browser.", 'Warning');
                 return;
             }
 
