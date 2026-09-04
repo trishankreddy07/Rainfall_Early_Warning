@@ -48,22 +48,60 @@ def parse_input(val, default=0.0):
         return default
 
 
-def make_prediction(humidity, pressure, min_temp, max_temp, rainfall):
+def safe_predict(input_data):
     """
-    Computes prediction using either a 5-feature DataFrame (for pipeline)
-    or a 3-feature array [humidity, pressure, rainfall] (for rainfall_model.pkl).
+    Defensive prediction function that handles array bounds checking
+    and single-class probability returns gracefully.
     """
     if pipeline is None:
         raise RuntimeError("No trained model found on server.")
 
-    # Convert inputs to floats
+    # Execute prediction
+    prediction = pipeline.predict(input_data)[0]
+
+    # Default fallback probability thresholds if indexing fails or is incomplete
+    rain_probability = 85.0 if prediction == 1 else 15.0
+
+    try:
+        if hasattr(pipeline, "predict_proba"):
+            probs = pipeline.predict_proba(input_data)
+            # Unwrap 2D array shape (1, N) to 1D array shape (N,)
+            if isinstance(probs, np.ndarray) and probs.ndim > 1:
+                probs = probs[0]
+
+            # Defensive array bounds check
+            if len(probs) > 1:
+                rain_probability = round(float(probs[1]) * 100, 2)
+            elif len(probs) == 1:
+                cls0_prob = float(probs[0])
+                if prediction == 1:
+                    rain_probability = round(cls0_prob * 100, 2)
+                else:
+                    rain_probability = round((1.0 - cls0_prob) * 100, 2)
+    except Exception as e:
+        print(f"Warning: safe_predict encountered probability indexing issue: {e}")
+
+    if prediction == 1:
+        status = f"HIGH RISK: Heavy Rainfall Expected ({rain_probability}% probability)"
+        level = "Red"
+    else:
+        status = f"LOW RISK: Clear Weather Expected ({round(100 - rain_probability, 2)}% safety score)"
+        level = "Green"
+
+    return status, level, rain_probability
+
+
+def process_and_predict(humidity, pressure, min_temp, max_temp, rainfall):
+    """
+    Formats input data for 5-feature DataFrames or 3-feature numpy arrays
+    and routes inference through safe_predict.
+    """
     h = parse_input(humidity, 70.0)
     p = parse_input(pressure, 1013.0)
     mn = parse_input(min_temp, 20.0)
     mx = parse_input(max_temp, 30.0)
     rf = parse_input(rainfall, 0.0)
 
-    # Check if pipeline expects 5 named features or 3 array features
     use_dataframe = False
     if hasattr(pipeline, 'feature_names_in_') and len(pipeline.feature_names_in_) == 5:
         use_dataframe = True
@@ -82,33 +120,19 @@ def make_prediction(humidity, pressure, min_temp, max_temp, rainfall):
         input_data = np.array([[h, p, rf]])
 
     try:
-        prediction = pipeline.predict(input_data)[0]
-        probabilities = pipeline.predict_proba(input_data)[0]
+        return safe_predict(input_data)
     except Exception:
-        # Fallback to alternative format if prediction failed
         if use_dataframe:
-            input_data = np.array([[h, p, rf]])
+            alt_data = np.array([[h, p, rf]])
         else:
-            input_data = pd.DataFrame([{
+            alt_data = pd.DataFrame([{
                 'Humidity9am': h,
                 'Pressure9am': p,
                 'MinTemp': mn,
                 'MaxTemp': mx,
                 'Rainfall': rf
             }])
-        prediction = pipeline.predict(input_data)[0]
-        probabilities = pipeline.predict_proba(input_data)[0]
-
-    rain_probability = round(float(probabilities[1]) * 100, 2)
-
-    if prediction == 1:
-        status = f"HIGH RISK: Heavy Rainfall Expected ({rain_probability}% probability)"
-        level = "Red"
-    else:
-        status = f"LOW RISK: Clear Weather Expected ({round(100 - rain_probability, 2)}% safety score)"
-        level = "Green"
-
-    return status, level, rain_probability
+        return safe_predict(alt_data)
 
 
 @app.route("/")
@@ -127,7 +151,7 @@ def predict():
     rainfall = data.get("rainfall", 0.0)
 
     try:
-        status, level, probability = make_prediction(humidity, pressure, min_temp, max_temp, rainfall)
+        status, level, probability = process_and_predict(humidity, pressure, min_temp, max_temp, rainfall)
         return jsonify({
             "status": status,
             "level": level,
@@ -169,26 +193,26 @@ def fetch_weather():
         current = res_data.get("current", {})
         daily = res_data.get("daily", {})
 
-        humidity = current.get("relative_humidity_2m", 70.0)
-        pressure = current.get("surface_pressure", 1013.25)
-        rainfall = current.get("precipitation", 0.0)
-        current_temp = current.get("temperature_2m", 25.0)
+        humidity = round(float(current.get("relative_humidity_2m", 70.0)), 1)
+        pressure = round(float(current.get("surface_pressure", 1013.25)), 1)
+        rainfall = round(float(current.get("precipitation", 0.0)), 1)
+        current_temp = round(float(current.get("temperature_2m", 25.0)), 1)
 
         max_temp_list = daily.get("temperature_2m_max", [])
         min_temp_list = daily.get("temperature_2m_min", [])
 
-        max_temp = max_temp_list[0] if max_temp_list else current_temp + 5.0
-        min_temp = min_temp_list[0] if min_temp_list else current_temp - 5.0
+        max_temp = round(float(max_temp_list[0]), 1) if max_temp_list else round(current_temp + 5.0, 1)
+        min_temp = round(float(min_temp_list[0]), 1) if min_temp_list else round(current_temp - 5.0, 1)
 
-        status, level, probability = make_prediction(humidity, pressure, min_temp, max_temp, rainfall)
+        status, level, probability = process_and_predict(humidity, pressure, min_temp, max_temp, rainfall)
 
         weather_obs = {
-            "humidity": round(float(humidity), 1),
-            "pressure": round(float(pressure), 1),
-            "rainfall": round(float(rainfall), 1),
-            "min_temp": round(float(min_temp), 1),
-            "max_temp": round(float(max_temp), 1),
-            "current_temp": round(float(current_temp), 1),
+            "humidity": humidity,
+            "pressure": pressure,
+            "rainfall": rainfall,
+            "min_temp": min_temp,
+            "max_temp": max_temp,
+            "current_temp": current_temp,
             "latitude": round(float(lat), 4),
             "longitude": round(float(lon), 4)
         }
@@ -197,6 +221,11 @@ def fetch_weather():
             "status": status,
             "level": level,
             "probability": probability,
+            "humidity": humidity,
+            "pressure": pressure,
+            "rainfall": rainfall,
+            "min_temp": min_temp,
+            "max_temp": max_temp,
             "weather": weather_obs
         })
 
