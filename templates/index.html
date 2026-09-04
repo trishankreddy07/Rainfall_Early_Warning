@@ -383,6 +383,89 @@
             display: none;
         }
 
+        /* Dual-Mode Photo Estimator Styles */
+        .mode-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+            background: rgba(15, 23, 42, 0.5);
+            padding: 4px;
+            border-radius: 12px;
+            border: 1px solid var(--card-border);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 8px 12px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .tab-btn.active {
+            background: rgba(56, 189, 248, 0.2);
+            color: var(--text-light);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+        }
+
+        .camera-container {
+            position: relative;
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px dashed rgba(56, 189, 248, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-top: 6px;
+        }
+
+        .camera-video {
+            width: 100%;
+            max-height: 280px;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+
+        .camera-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-cam {
+            flex: 1;
+            padding: 8px 12px;
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            color: #38bdf8;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-cam:hover {
+            background: rgba(56, 189, 248, 0.3);
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -538,17 +621,56 @@
                 <h3><i class="fa-solid fa-camera"></i> <span id="lbl-photo-title">Crowdsourced Flood Photo Estimator (AI Vision)</span></h3>
             </div>
 
-            <div class="input-group" style="margin-bottom: 12px;">
-                <label><i class="fa-solid fa-upload"></i> Upload Ground Flood Photo</label>
-                <input type="file" id="photo-input" class="input-field" accept="image/*" onchange="previewPhoto(event)">
+            <!-- Mode Selector Tabs -->
+            <div class="mode-tabs">
+                <button type="button" class="tab-btn active" id="tab-btn-upload" onclick="switchPhotoMode('upload')">
+                    <i class="fa-solid fa-upload"></i> Upload File
+                </button>
+                <button type="button" class="tab-btn" id="tab-btn-camera" onclick="switchPhotoMode('camera')">
+                    <i class="fa-solid fa-video"></i> Live Camera
+                </button>
             </div>
 
+            <!-- File Upload Pane -->
+            <div id="pane-upload" class="photo-pane">
+                <div class="input-group">
+                    <label><i class="fa-solid fa-file-image"></i> Select Ground Photo</label>
+                    <input type="file" id="floodFileInput" class="input-field" accept="image/*" onchange="previewUploadFile(event)">
+                </div>
+            </div>
+
+            <!-- Live Camera Pane -->
+            <div id="pane-camera" class="photo-pane" style="display: none;">
+                <div class="camera-container">
+                    <video id="cameraStream" class="camera-video" autoplay playsinline hidden></video>
+                    <canvas id="photoCanvas" hidden></canvas>
+                    <div id="camera-placeholder" style="padding: 24px 15px; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+                        <i class="fa-solid fa-camera-retro" style="font-size: 2rem; margin-bottom: 8px; color: #38bdf8;"></i><br>
+                        Click "Start Camera" to open mobile/desktop camera.
+                    </div>
+                </div>
+                <div class="camera-controls">
+                    <button type="button" id="btnStartCamera" class="btn-cam" onclick="startCameraStream()">
+                        <i class="fa-solid fa-power-off"></i> Start Camera
+                    </button>
+                    <button type="button" id="btnCapturePhoto" class="btn-cam" onclick="captureCameraPhoto()" style="display: none;">
+                        <i class="fa-solid fa-circle-dot"></i> Capture Photo
+                    </button>
+                    <button type="button" id="btnSwitchCamera" class="btn-cam" onclick="switchCameraFacing()" style="display: none;">
+                        <i class="fa-solid fa-arrows-rotate"></i> Switch Camera
+                    </button>
+                </div>
+            </div>
+
+            <!-- Photo Preview Image -->
             <img id="photo-preview" class="photo-preview-img" alt="Flood Photo Preview">
 
-            <button class="btn-predict" id="btn-analyze-photo" onclick="uploadFloodPhoto()" style="margin-top: 12px; display: none;">
+            <!-- Analyze Button -->
+            <button class="btn-predict" id="btn-analyze-photo" onclick="submitFloodPhotoAnalysis()" style="margin-top: 12px; display: none;">
                 <i class="fa-solid fa-eye"></i> Analyze Flood Depth
             </button>
 
+            <!-- Advisory Result Box -->
             <div id="photo-result" class="advisory-box" style="display: none; margin-top: 12px;"></div>
         </div>
     </div>
@@ -991,8 +1113,56 @@
             box.innerHTML = `<strong style="color: ${color};"><i class="fa-solid fa-triangle-exclamation"></i> ${riskRating}:</strong> ${advisoryText}`;
         }
 
-        // Crowdsourced Photo Flood Estimator (AI Vision)
-        function previewPhoto(event) {
+        // Crowdsourced Photo Flood Estimator (AI Vision & Camera Controls)
+        let currentFacingMode = "environment";
+        let mediaStream = null;
+        let activePhotoMode = "upload";
+        let capturedBase64Image = null;
+
+        function switchPhotoMode(mode) {
+            activePhotoMode = mode;
+            const tabUpload = document.getElementById('tab-btn-upload');
+            const tabCamera = document.getElementById('tab-btn-camera');
+            const paneUpload = document.getElementById('pane-upload');
+            const paneCamera = document.getElementById('pane-camera');
+            const previewImg = document.getElementById('photo-preview');
+            const analyzeBtn = document.getElementById('btn-analyze-photo');
+            const resultBox = document.getElementById('photo-result');
+
+            if (mode === 'upload') {
+                if (tabUpload) tabUpload.classList.add('active');
+                if (tabCamera) tabCamera.classList.remove('active');
+                if (paneUpload) paneUpload.style.display = 'block';
+                if (paneCamera) paneCamera.style.display = 'none';
+                stopCameraStream();
+
+                const fileInput = document.getElementById('floodFileInput');
+                if (fileInput && fileInput.files && fileInput.files[0]) {
+                    previewImg.style.display = 'block';
+                    analyzeBtn.style.display = 'flex';
+                } else {
+                    previewImg.style.display = 'none';
+                    analyzeBtn.style.display = 'none';
+                }
+            } else {
+                if (tabCamera) tabCamera.classList.add('active');
+                if (tabUpload) tabUpload.classList.remove('active');
+                if (paneCamera) paneCamera.style.display = 'block';
+                if (paneUpload) paneUpload.style.display = 'none';
+
+                if (capturedBase64Image) {
+                    previewImg.src = capturedBase64Image;
+                    previewImg.style.display = 'block';
+                    analyzeBtn.style.display = 'flex';
+                } else {
+                    previewImg.style.display = 'none';
+                    analyzeBtn.style.display = 'none';
+                }
+            }
+            if (resultBox) resultBox.style.display = 'none';
+        }
+
+        function previewUploadFile(event) {
             const file = event.target.files[0];
             const previewImg = document.getElementById('photo-preview');
             const analyzeBtn = document.getElementById('btn-analyze-photo');
@@ -1010,23 +1180,126 @@
             }
         }
 
-        async function uploadFloodPhoto() {
-            const input = document.getElementById('photo-input');
+        function previewPhoto(event) { previewUploadFile(event); }
+
+        async function startCameraStream() {
+            const video = document.getElementById('cameraStream');
+            const placeholder = document.getElementById('camera-placeholder');
+            const btnStart = document.getElementById('btnStartCamera');
+            const btnCapture = document.getElementById('btnCapturePhoto');
+            const btnSwitch = document.getElementById('btnSwitchCamera');
             const resultBox = document.getElementById('photo-result');
 
-            if (!input.files || input.files.length === 0) return;
-
-            const formData = new FormData();
-            formData.append('file', input.files[0]);
-
-            resultBox.style.display = 'block';
-            resultBox.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Analyzing ground flood photo heuristics...';
+            stopCameraStream();
 
             try {
-                const response = await fetch('/analyze_flood_image', {
-                    method: 'POST',
-                    body: formData
-                });
+                const constraints = {
+                    video: {
+                        facingMode: currentFacingMode,
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                };
+
+                mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = mediaStream;
+                video.hidden = false;
+                if (placeholder) placeholder.style.display = 'none';
+
+                btnStart.innerHTML = '<i class="fa-solid fa-power-off"></i> Stop Camera';
+                btnStart.onclick = stopCameraStream;
+                if (btnCapture) btnCapture.style.display = 'flex';
+                if (btnSwitch) btnSwitch.style.display = 'flex';
+            } catch (err) {
+                console.error("Camera access error:", err);
+                if (resultBox) {
+                    resultBox.style.display = 'block';
+                    resultBox.innerHTML = `<span style="color: #f87171;"><i class="fa-solid fa-video-slash"></i> Camera access error: ${err.message}. Ensure permissions are granted.</span>`;
+                }
+            }
+        }
+
+        function stopCameraStream() {
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+                mediaStream = null;
+            }
+            const video = document.getElementById('cameraStream');
+            const placeholder = document.getElementById('camera-placeholder');
+            const btnStart = document.getElementById('btnStartCamera');
+            const btnCapture = document.getElementById('btnCapturePhoto');
+            const btnSwitch = document.getElementById('btnSwitchCamera');
+
+            if (video) video.hidden = true;
+            if (placeholder) placeholder.style.display = 'block';
+
+            if (btnStart) {
+                btnStart.innerHTML = '<i class="fa-solid fa-power-off"></i> Start Camera';
+                btnStart.onclick = startCameraStream;
+            }
+            if (btnCapture) btnCapture.style.display = 'none';
+            if (btnSwitch) btnSwitch.style.display = 'none';
+        }
+
+        function switchCameraFacing() {
+            currentFacingMode = (currentFacingMode === "environment") ? "user" : "environment";
+            startCameraStream();
+        }
+
+        function captureCameraPhoto() {
+            const video = document.getElementById('cameraStream');
+            const canvas = document.getElementById('photoCanvas');
+            const previewImg = document.getElementById('photo-preview');
+            const analyzeBtn = document.getElementById('btn-analyze-photo');
+            const resultBox = document.getElementById('photo-result');
+
+            if (!video || !video.srcObject) return;
+
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            capturedBase64Image = canvas.toDataURL('image/jpeg', 0.9);
+            previewImg.src = capturedBase64Image;
+            previewImg.style.display = 'block';
+            analyzeBtn.style.display = 'flex';
+            if (resultBox) resultBox.style.display = 'none';
+
+            stopCameraStream();
+        }
+
+        async function submitFloodPhotoAnalysis() {
+            const resultBox = document.getElementById('photo-result');
+            resultBox.style.display = 'block';
+            resultBox.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Analyzing ground flood photo heuristics (AI Vision)...';
+
+            try {
+                let response;
+
+                if (activePhotoMode === 'upload') {
+                    const input = document.getElementById('floodFileInput') || document.getElementById('photo-input');
+                    if (!input || !input.files || input.files.length === 0) {
+                        throw new Error("Please select an image file to upload.");
+                    }
+                    const formData = new FormData();
+                    formData.append('file', input.files[0]);
+
+                    response = await fetch('/analyze_flood_image', {
+                        method: 'POST',
+                        body: formData
+                    });
+                } else {
+                    if (!capturedBase64Image) {
+                        throw new Error("No photo captured from camera.");
+                    }
+                    response = await fetch('/analyze_flood_image', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ image_base64: capturedBase64Image })
+                    });
+                }
 
                 const data = await response.json();
 
@@ -1034,21 +1307,47 @@
                     throw new Error(data.error || "Image analysis failed.");
                 }
 
-                const color = data.level === 'Red' ? '#fca5a5' : '#86efac';
+                const depthLabel = data.depth_label || data.depth_tag || "Unknown";
+                const estimatedCm = data.estimated_cm !== undefined ? data.estimated_cm : data.depth_cm;
+                const riskIndicator = data.risk_indicator || data.risk_rating || "MODERATE";
+                const advisory = data.advisory || data.advice || "";
+                const level = data.level || (riskIndicator === "HIGH" ? "Red" : "Green");
+
+                const color = level === 'Red' ? '#fca5a5' : '#86efac';
+                const badgeBg = level === 'Red' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(34, 197, 94, 0.2)';
+                const badgeBorder = level === 'Red' ? 'rgba(239, 68, 68, 0.4)' : 'rgba(34, 197, 94, 0.4)';
+
+                resultBox.style.background = badgeBg;
+                resultBox.style.borderColor = badgeBorder;
+
                 resultBox.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                        <strong style="color: ${color};"><i class="fa-solid fa-water"></i> Verified Tag: ${data.depth_tag}</strong>
-                        <span style="font-size:0.78rem; color:#94a3b8;">Depth: ~${data.depth_cm}cm</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+                        <strong style="color: ${color}; font-size: 0.95rem;">
+                            <i class="fa-solid fa-water"></i> ${depthLabel}
+                        </strong>
+                        <span style="background: rgba(15, 23, 42, 0.7); padding: 2px 8px; border-radius: 6px; font-weight: 600; color: ${color}; font-size: 0.8rem;">
+                            Estimated Depth: ~${estimatedCm} cm
+                        </span>
                     </div>
-                    <div style="color: #cbd5e1; font-size:0.85rem;"><strong>Rating:</strong> ${data.risk_rating}</div>
-                    <div style="color: #94a3b8; font-size:0.82rem; margin-top:4px;"><strong>Advice:</strong> ${data.advice}</div>
+                    <div style="display:flex; align-items:center; gap: 8px; margin-bottom:6px;">
+                        <span style="font-size:0.78rem; font-weight:700; padding:2px 6px; border-radius:4px; background:${color}; color:#000;">
+                            ${riskIndicator} RISK
+                        </span>
+                    </div>
+                    <div style="color: #e2e8f0; font-size: 0.85rem; line-height: 1.4;">
+                        <strong>Safety Advisory:</strong> ${advisory}
+                    </div>
                 `;
 
             } catch (err) {
                 console.error(err);
+                resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
+                resultBox.style.borderColor = 'rgba(239, 68, 68, 0.4)';
                 resultBox.innerHTML = `<span style="color: #f87171;"><i class="fa-solid fa-xmark"></i> ${err.message}</span>`;
             }
         }
+
+        async function uploadFloodPhoto() { await submitFloodPhotoAnalysis(); }
 
         // HTML5 Geolocation Handler
         async function useCurrentLocation() {
