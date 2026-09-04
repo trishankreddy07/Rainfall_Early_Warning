@@ -50,17 +50,16 @@ def parse_input(val, default=0.0):
 
 def safe_predict(input_data):
     """
-    Defensive prediction function that handles array bounds checking
-    and single-class probability returns gracefully.
+    Defensive prediction function with exact continuous decimal safety score calculations.
     """
     if pipeline is None:
         raise RuntimeError("No trained model found on server.")
 
-    # Execute prediction
+    # Execute prediction (0 or 1)
     prediction = pipeline.predict(input_data)[0]
 
-    # Default fallback probability thresholds if indexing fails or is incomplete
-    rain_probability = 85.0 if prediction == 1 else 15.0
+    # Default fallback probability score (e.g., 85.0% for high risk, 15.0% for low risk)
+    risk_probability = 85.0 if prediction == 1 else 15.0
 
     try:
         if hasattr(pipeline, "predict_proba"):
@@ -71,24 +70,28 @@ def safe_predict(input_data):
 
             # Defensive array bounds check
             if len(probs) > 1:
-                rain_probability = round(float(probs[1]) * 100, 2)
+                risk_probability = round(float(probs[1]) * 100, 1)
             elif len(probs) == 1:
                 cls0_prob = float(probs[0])
                 if prediction == 1:
-                    rain_probability = round(cls0_prob * 100, 2)
+                    risk_probability = round(cls0_prob * 100, 1)
                 else:
-                    rain_probability = round((1.0 - cls0_prob) * 100, 2)
+                    risk_probability = round((1.0 - cls0_prob) * 100, 1)
     except Exception as e:
         print(f"Warning: safe_predict encountered probability indexing issue: {e}")
 
+    # Ensure risk_probability is bounded in [0.0, 100.0]
+    risk_probability = max(0.0, min(100.0, float(risk_probability)))
+    safety_score = round(100.0 - risk_probability, 1)
+
     if prediction == 1:
-        status = f"HIGH RISK: Heavy Rainfall Expected ({rain_probability}% probability)"
+        status = f"HIGH RISK: Heavy Rainfall Expected ({risk_probability}% probability)"
         level = "Red"
     else:
-        status = f"LOW RISK: Clear Weather Expected ({round(100 - rain_probability, 2)}% safety score)"
+        status = f"LOW RISK: Clear Weather Expected ({safety_score}% safety score)"
         level = "Green"
 
-    return status, level, rain_probability
+    return status, level, risk_probability, safety_score
 
 
 def process_and_predict(humidity, pressure, min_temp, max_temp, rainfall):
@@ -135,6 +138,26 @@ def process_and_predict(humidity, pressure, min_temp, max_temp, rainfall):
         return safe_predict(alt_data)
 
 
+def resolve_location_name(lat, lon):
+    """Reverse geocodes coordinates to a clean Location Name string."""
+    try:
+        url = f"https://api.bigdatacloud.net/data/reverse-geocode-client?latitude={lat}&longitude={lon}&localityLanguage=en"
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req) as response:
+            res_data = json.loads(response.read().decode('utf-8'))
+        
+        city = res_data.get('city') or res_data.get('locality') or ""
+        state = res_data.get('principalSubdivision') or ""
+        country = res_data.get('countryName') or ""
+
+        parts = [p for p in [city, state, country] if p and p.strip()]
+        if parts:
+            return ", ".join(parts)
+    except Exception as e:
+        print(f"Server-side reverse geocoding notice: {e}")
+    return f"Location ({float(lat):.2f}, {float(lon):.2f})"
+
+
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -151,29 +174,34 @@ def predict():
     rainfall = data.get("rainfall", 0.0)
 
     try:
-        status, level, probability = process_and_predict(humidity, pressure, min_temp, max_temp, rainfall)
+        status, level, probability, safety_score = process_and_predict(humidity, pressure, min_temp, max_temp, rainfall)
         return jsonify({
             "status": status,
             "level": level,
-            "probability": probability
+            "probability": probability,
+            "safety_score": safety_score
         })
     except Exception as e:
         return jsonify({
             "status": f"Prediction Error: {str(e)}",
             "level": "Red",
-            "probability": 0.0
+            "probability": 0.0,
+            "safety_score": 0.0
         }), 500
 
 
 @app.route("/fetch_weather", methods=["GET", "POST"])
 def fetch_weather():
+    location_name_in = None
     if request.method == "POST":
         data = request.get_json(silent=True) or {}
         lat = data.get("latitude")
         lon = data.get("longitude")
+        location_name_in = data.get("location_name")
     else:
         lat = request.args.get("latitude")
         lon = request.args.get("longitude")
+        location_name_in = request.args.get("location_name")
 
     if not lat or not lon:
         return jsonify({"error": "Latitude and longitude parameters are required"}), 400
@@ -211,7 +239,13 @@ def fetch_weather():
         else:
             rainfall = 0.0
 
-        status, level, probability = process_and_predict(humidity, pressure, min_temp, max_temp, rainfall)
+        status, level, probability, safety_score = process_and_predict(humidity, pressure, min_temp, max_temp, rainfall)
+
+        # Resolve location name if not provided or generic
+        if location_name_in and not location_name_in.startswith("Location (") and not location_name_in.startswith("Your GPS Location"):
+            resolved_location = location_name_in
+        else:
+            resolved_location = resolve_location_name(lat, lon)
 
         # Build 24-Hour Hourly Trajectory
         hourly_times = hourly.get("time", [])
@@ -222,7 +256,7 @@ def fetch_weather():
         current_time_str = current.get("time", "")
         start_idx = 0
         if current_time_str and hourly_times:
-            curr_prefix = current_time_str.split(":")[0]  # e.g., "2026-09-04T19"
+            curr_prefix = current_time_str.split(":")[0]
             for idx, t_str in enumerate(hourly_times):
                 if t_str.startswith(curr_prefix):
                     start_idx = idx
@@ -237,12 +271,12 @@ def fetch_weather():
         for i in indices:
             raw_time = hourly_times[i] if i < len(hourly_times) else f"H+{i}"
             time_display = raw_time.split("T")[1] if "T" in raw_time else raw_time
-            
+
             h_hum = round(float(hourly_hum[i]), 1) if i < len(hourly_hum) and hourly_hum[i] is not None else humidity
             h_pres = round(float(hourly_pres[i]), 1) if i < len(hourly_pres) and hourly_pres[i] is not None else pressure
             h_precip = round(float(hourly_precip[i]), 1) if i < len(hourly_precip) and hourly_precip[i] is not None else 0.0
 
-            h_status, h_level, h_prob = process_and_predict(h_hum, h_pres, min_temp, max_temp, h_precip)
+            h_status, h_level, h_prob, h_safety = process_and_predict(h_hum, h_pres, min_temp, max_temp, h_precip)
 
             hourly_trajectory.append({
                 "time": time_display,
@@ -250,6 +284,7 @@ def fetch_weather():
                 "pressure": h_pres,
                 "rainfall": h_precip,
                 "probability": h_prob,
+                "safety_score": h_safety,
                 "level": h_level,
                 "status": h_status
             })
@@ -269,11 +304,13 @@ def fetch_weather():
             "status": status,
             "level": level,
             "probability": probability,
+            "safety_score": safety_score,
             "humidity": humidity,
             "pressure": pressure,
             "rainfall": rainfall,
             "min_temp": min_temp,
             "max_temp": max_temp,
+            "location_name": resolved_location,
             "weather": weather_obs,
             "hourly_trajectory": hourly_trajectory
         })

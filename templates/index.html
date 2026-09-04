@@ -390,7 +390,7 @@
         <div class="live-banner">
             <div class="banner-item">
                 <i class="fa-solid fa-location-dot"></i>
-                <span id="banner-location" class="banner-location">Region: Hyderabad, India</span>
+                <span id="banner-location" class="banner-location">📍 Region: Hyderabad, India</span>
                 <span id="banner-coords" style="color: #94a3b8; font-size: 0.78rem;">[17.38, 78.48]</span>
             </div>
             <div class="banner-item">
@@ -403,7 +403,7 @@
         <div class="location-section">
             <div class="location-controls">
                 <div class="search-box">
-                    <input type="text" id="city-input" placeholder="Search city worldwide (e.g. Hyderabad)..."
+                    <input type="text" id="city-input" placeholder="Search city worldwide (e.g. Tirupati)..."
                         onkeypress="handleSearchKeyPress(event)">
                     <button id="btn-city-search" onclick="searchCity()" title="Search City">
                         <i class="fa-solid fa-magnifying-glass"></i>
@@ -497,7 +497,8 @@
         }
 
         function setBannerLocation(regionName, lat, lon) {
-            document.getElementById('banner-location').textContent = `Region: ${regionName}`;
+            const cleanName = regionName.startsWith('📍 Region:') ? regionName.replace('📍 Region:', '').trim() : regionName;
+            document.getElementById('banner-location').textContent = `📍 Region: ${cleanName}`;
             document.getElementById('banner-coords').textContent = `[${lat.toFixed(2)}, ${lon.toFixed(2)}]`;
         }
 
@@ -596,7 +597,11 @@
                 const response = await fetch('/fetch_weather', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ latitude: latitude, longitude: longitude })
+                    body: JSON.stringify({
+                        latitude: latitude,
+                        longitude: longitude,
+                        location_name: regionLabel
+                    })
                 });
 
                 const data = await response.json();
@@ -618,9 +623,9 @@
                 document.getElementById('min_temp').value = minTempVal;
                 document.getElementById('max_temp').value = maxTempVal;
 
-                // Update Header Banner
-                const label = regionLabel || `Location (${latitude.toFixed(2)}, ${longitude.toFixed(2)})`;
-                setBannerLocation(label, latitude, longitude);
+                // Update Header Banner dynamically with returned resolved location_name
+                const finalLabel = data.location_name || regionLabel || `Location (${latitude.toFixed(2)}, ${longitude.toFixed(2)})`;
+                setBannerLocation(finalLabel, latitude, longitude);
 
                 // Display ML prediction result
                 showResult(data.status, data.level);
@@ -636,8 +641,8 @@
             }
         }
 
-        // HTML5 Geolocation Handler
-        function useCurrentLocation() {
+        // HTML5 Geolocation Handler with Reverse Geocoding
+        async function useCurrentLocation() {
             if (!navigator.geolocation) {
                 showResult("Geolocation is not supported by your browser. Please search for a city instead.", 'Warning');
                 return;
@@ -646,10 +651,31 @@
             showLoading("Acquiring GPS coordinates...");
 
             navigator.geolocation.getCurrentPosition(
-                (position) => {
+                async (position) => {
                     const lat = position.coords.latitude;
                     const lon = position.coords.longitude;
-                    fetchWeatherData(lat, lon, "Your GPS Location");
+
+                    showLoading("Resolving GPS place name & fetching live weather...");
+
+                    let locationName = null;
+                    try {
+                        const geoUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`;
+                        const geoRes = await fetch(geoUrl);
+                        const geoData = await geoRes.json();
+
+                        const city = geoData.city || geoData.locality || "";
+                        const state = geoData.principalSubdivision || "";
+                        const country = geoData.countryName || "";
+
+                        const parts = [city, state, country].filter(p => p && p.trim() !== "");
+                        if (parts.length > 0) {
+                            locationName = parts.join(", ");
+                        }
+                    } catch (err) {
+                        console.warn("Client reverse geocoding notice:", err);
+                    }
+
+                    fetchWeatherData(lat, lon, locationName);
                 },
                 (error) => {
                     let errorMsg = "Unable to retrieve location.";
@@ -689,10 +715,12 @@
                 const topMatch = geoData.results[0];
                 const lat = topMatch.latitude;
                 const lon = topMatch.longitude;
-                const cityName = topMatch.name;
-                const admin1 = topMatch.admin1 ? `, ${topMatch.admin1}` : '';
-                const country = topMatch.country ? `, ${topMatch.country}` : '';
-                const regionName = `${cityName}${admin1}${country}`;
+                const cityName = topMatch.name || "";
+                const admin1 = topMatch.admin1 || "";
+                const country = topMatch.country || "";
+
+                const parts = [cityName, admin1, country].filter(p => p && p.trim() !== "");
+                const regionName = parts.length > 0 ? parts.join(", ") : query;
 
                 fetchWeatherData(lat, lon, regionName);
 
