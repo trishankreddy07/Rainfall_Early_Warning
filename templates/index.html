@@ -372,9 +372,9 @@
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: #e2e8f0;
-            padding: 8px 14px;
-            border-radius: 10px;
-            font-size: 0.82rem;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -573,6 +573,20 @@
             </div>
         </div>
 
+        <!-- Historical Rainfall Comparison 2015–Present Card -->
+        <div id="historical-card" class="feature-card" style="display: none;">
+            <div class="feature-card-header">
+                <h3><i class="fa-solid fa-clock-rotate-left"></i> <span id="lbl-hist-title">Historical Rainfall Comparison (2015–Present)</span></h3>
+                <span style="font-size:0.78rem; color:var(--text-muted);">Open-Meteo Climate Archive</span>
+            </div>
+            <div id="hist-badge" class="advisory-box" style="margin-bottom: 14px; background: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.3); color: #7dd3fc;">
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Fetching 10-year historical climate baseline...
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="historicalRainChart"></canvas>
+            </div>
+        </div>
+
         <!-- Agricultural Crop Submergence & Harvest Advisor -->
         <div class="feature-card">
             <div class="feature-card-header">
@@ -618,7 +632,9 @@
 
     <script>
         let riskChart = null;
+        let histChart = null;
         let baseWeatherData = { humidity: 85, pressure: 1005, rainfall: 12, min_temp: 18, max_temp: 28, soil_moisture: 0.30 };
+        let currentCoords = { lat: 17.38, lon: 78.48 };
         let currentLang = 'en';
 
         // Multilingual i18n Dictionary
@@ -636,6 +652,7 @@
                 predictBtn: "Run AI Prediction",
                 chartTitle: "24-Hour Risk Trajectory",
                 whatifTitle: "Interactive Climate Escalation Simulator",
+                histTitle: "Historical Rainfall Comparison (2015–Present)",
                 cropTitle: "Agricultural Crop Submergence Advisor",
                 photoTitle: "Crowdsourced Flood Photo Estimator (AI Vision)"
             },
@@ -652,6 +669,7 @@
                 predictBtn: "एआई पूर्वानुमान चलाएं",
                 chartTitle: "24-घंटे का जोखिम प्रक्षेपवक्र",
                 whatifTitle: "इंटरएक्टिव जलवायु अनुकरणकर्ता",
+                histTitle: "ऐतिहासिक वर्षा तुलना (2015-वर्तमान)",
                 cropTitle: "कृषि फसल जलमग्नता और कटाई सलाहकार",
                 photoTitle: "बाढ़ फोटो गहराई विश्लेषक"
             },
@@ -668,6 +686,7 @@
                 predictBtn: "AI అంచనాను ప్రారంభించండి",
                 chartTitle: "24-గంటల ప్రమాద పటం",
                 whatifTitle: "వాతావరణ మార్పుల సిమ్యులేటర్",
+                histTitle: "చారిత్రక వర్షపాత పోలిక (2015–ప్రస్తుతం)",
                 cropTitle: "వ్యవసాయ పంటల ముంపు సలహాదారు",
                 photoTitle: "వరద ఫోటో లోతు విశ్లేషణ"
             },
@@ -684,6 +703,7 @@
                 predictBtn: "AI கணிப்பை இயக்கவும்",
                 chartTitle: "24-மணிநேர இடர் வரைபடம்",
                 whatifTitle: "காலநிலை உருவகப்படுத்துதல்",
+                histTitle: "வரலாற்று மழைப்பொழிவு ஒப்பீடு (2015-தற்போது)",
                 cropTitle: "விவசாய பயிர் மூழ்கல் ஆலோசகர்",
                 photoTitle: "வெள்ள புகைப்பட ஆழம் பகுப்பாய்வு"
             }
@@ -705,6 +725,7 @@
             document.getElementById('lbl-predict-btn').textContent = dict.predictBtn;
             document.getElementById('lbl-chart-title').textContent = dict.chartTitle;
             document.getElementById('lbl-whatif-title').textContent = dict.whatifTitle;
+            document.getElementById('lbl-hist-title').textContent = dict.histTitle;
             document.getElementById('lbl-crop-title').textContent = dict.cropTitle;
             document.getElementById('lbl-photo-title').textContent = dict.photoTitle;
 
@@ -755,6 +776,15 @@
             soilVal.textContent = `${sm} m³/m³ (${satPct}% Saturation)`;
             soilTag.textContent = riskText;
             soilTag.className = `soil-tag ${riskColor}`;
+        }
+
+        // JS Debounce Helper
+        function debounce(func, wait) {
+            let timeout;
+            return function (...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
         }
 
         // Render 24-Hour Chart via Chart.js
@@ -841,9 +871,107 @@
             });
         }
 
+        // Render Historical Rainfall Bar Chart (2015–Present)
+        function renderHistoricalChart(years, totals, recentYear) {
+            const chartCard = document.getElementById('historical-card');
+            chartCard.style.display = 'block';
+
+            const canvas = document.getElementById('historicalRainChart');
+            const ctx = canvas.getContext('2d');
+
+            const barColors = years.map(y => y === recentYear ? '#f43f5e' : '#38bdf8');
+            const hoverColors = years.map(y => y === recentYear ? '#fb7185' : '#06b6d4');
+
+            if (histChart) {
+                histChart.destroy();
+            }
+
+            histChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: years,
+                    datasets: [{
+                        label: 'Total Annual Rainfall (mm)',
+                        data: totals,
+                        backgroundColor: barColors,
+                        hoverBackgroundColor: hoverColors,
+                        borderRadius: 6,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#94a3b8', font: { size: 11 } }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.08)' },
+                            ticks: {
+                                color: '#94a3b8',
+                                font: { size: 11 },
+                                callback: function (value) { return value + ' mm'; }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            titleColor: '#38bdf8',
+                            bodyColor: '#f8fafc',
+                            borderColor: 'rgba(255, 255, 255, 0.2)',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function (context) { return ` Total Rainfall: ${context.parsed.y} mm`; }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Fetch Historical Rainfall Data 2015-Present (Asynchronous background)
+        async function fetchHistoricalData(latitude, longitude) {
+            const badge = document.getElementById('hist-badge');
+            const card = document.getElementById('historical-card');
+            card.style.display = 'block';
+            badge.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Loading 10-year historical climate baseline...';
+
+            try {
+                const response = await fetch('/fetch_historical', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ latitude: latitude, longitude: longitude })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || data.error) {
+                    throw new Error(data.error || "Failed to fetch historical data.");
+                }
+
+                // Update badge text
+                badge.innerHTML = `<i class="fa-solid fa-chart-column"></i> ${data.badge_text}`;
+
+                // Render Historical Bar Chart
+                if (data.years && data.totals) {
+                    renderHistoricalChart(data.years, data.totals, data.recent_year);
+                }
+
+            } catch (err) {
+                console.error("Historical fetch notice:", err);
+                badge.innerHTML = `<i class="fa-solid fa-circle-info"></i> Historical baseline data unavailable for this location.`;
+            }
+        }
+
         // Fetch Live Weather & Predict via Backend /fetch_weather
         async function fetchWeatherData(latitude, longitude, regionLabel = null) {
             showLoading("Connecting to Open-Meteo & retrieving live satellite telemetry...");
+            currentCoords = { lat: latitude, lon: longitude };
 
             try {
                 const response = await fetch('/fetch_weather', {
@@ -862,7 +990,7 @@
                     throw new Error(data.error || "Failed to fetch weather from backend.");
                 }
 
-                // Store base weather data for What-If simulator
+                // Store base weather data for What-If simulator calibration
                 baseWeatherData.humidity = data.weather ? data.weather.humidity : data.humidity;
                 baseWeatherData.pressure = data.weather ? data.weather.pressure : data.pressure;
                 baseWeatherData.rainfall = data.weather ? data.weather.rainfall : data.rainfall;
@@ -900,13 +1028,16 @@
                 // Evaluate Crop Advisory
                 evaluateCropAdvisory();
 
+                // Asynchronously fetch Historical Rainfall baseline
+                fetchHistoricalData(latitude, longitude);
+
             } catch (err) {
                 console.error(err);
                 showResult(`Weather Fetch Warning: ${err.message}. You can still adjust values manually and predict.`, 'Warning');
             }
         }
 
-        // What-If Climate Escalation Simulator Handlers
+        // What-If Climate Escalation Simulator Handlers (Debounced & Calibrated)
         function resetSlidersSilently() {
             document.getElementById('slider-rainfall').value = 0;
             document.getElementById('slider-pressure').value = 0;
@@ -924,14 +1055,10 @@
             sendManualData();
         }
 
-        async function onSliderInput() {
-            const addRain = parseInt(document.getElementById('slider-rainfall').value);
-            const dropPres = parseInt(document.getElementById('slider-pressure').value);
-            const spikeHum = parseInt(document.getElementById('slider-humidity').value);
-
-            document.getElementById('val-slider-rainfall').textContent = `+${addRain} mm`;
-            document.getElementById('val-slider-pressure').textContent = `-${dropPres} hPa`;
-            document.getElementById('val-slider-humidity').textContent = `+${spikeHum} %`;
+        const debouncedPredict = debounce(async function () {
+            const addRain = parseFloat(document.getElementById('slider-rainfall').value) || 0;
+            const dropPres = parseFloat(document.getElementById('slider-pressure').value) || 0;
+            const spikeHum = parseFloat(document.getElementById('slider-humidity').value) || 0;
 
             const effHum = Math.min(100, Math.max(0, baseWeatherData.humidity + spikeHum));
             const effPres = Math.max(800, baseWeatherData.pressure - dropPres);
@@ -944,6 +1071,18 @@
             // Trigger real-time prediction
             await sendManualData();
             evaluateCropAdvisory();
+        }, 300);
+
+        function onSliderInput() {
+            const addRain = parseFloat(document.getElementById('slider-rainfall').value) || 0;
+            const dropPres = parseFloat(document.getElementById('slider-pressure').value) || 0;
+            const spikeHum = parseFloat(document.getElementById('slider-humidity').value) || 0;
+
+            document.getElementById('val-slider-rainfall').textContent = `+${addRain} mm`;
+            document.getElementById('val-slider-pressure').textContent = `-${dropPres} hPa`;
+            document.getElementById('val-slider-humidity').textContent = `+${spikeHum} %`;
+
+            debouncedPredict();
         }
 
         // Agricultural Crop Submergence Advisor
@@ -1168,8 +1307,6 @@
 
         // Manual Prediction Submission (/predict)
         async function sendManualData() {
-            showLoading("Analyzing inputs with scikit-learn model...");
-
             const payload = {
                 humidity: document.getElementById('humidity').value,
                 pressure: document.getElementById('pressure').value,

@@ -134,7 +134,7 @@ def resolve_location_name(lat, lon):
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         with urllib.request.urlopen(req) as response:
             res_data = json.loads(response.read().decode('utf-8'))
-        
+
         city = res_data.get('city') or res_data.get('locality') or ""
         state = res_data.get('principalSubdivision') or ""
         country = res_data.get('countryName') or ""
@@ -336,6 +336,77 @@ def fetch_weather():
         return jsonify({"error": f"Failed to fetch weather data: {str(e)}"}), 500
 
 
+@app.route("/fetch_historical", methods=["GET", "POST"])
+def fetch_historical():
+    if request.method == "POST":
+        data = request.get_json(silent=True) or {}
+        lat = data.get("latitude")
+        lon = data.get("longitude")
+    else:
+        lat = request.args.get("latitude")
+        lon = request.args.get("longitude")
+
+    if not lat or not lon:
+        return jsonify({"error": "Latitude and longitude parameters are required"}), 400
+
+    try:
+        url = (
+            f"https://archive-api.open-meteo.com/v1/archive?"
+            f"latitude={lat}&longitude={lon}"
+            f"&start_date=2015-01-01&end_date=2025-12-31"
+            f"&daily=precipitation_sum"
+            f"&timezone=auto"
+        )
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req) as response:
+            res_data = json.loads(response.read().decode('utf-8'))
+
+        daily = res_data.get("daily", {})
+        times = daily.get("time", [])
+        precip = daily.get("precipitation_sum", [])
+
+        yearly_totals = {}
+        for t, p in zip(times, precip):
+            yr = t.split("-")[0]
+            val = float(p) if p is not None else 0.0
+            yearly_totals[yr] = round(yearly_totals.get(yr, 0.0) + val, 1)
+
+        sorted_years = sorted(yearly_totals.keys())
+        if not sorted_years:
+            return jsonify({"error": "No historical precipitation data returned"}), 500
+
+        past_years = sorted_years[:-1] if len(sorted_years) > 1 else sorted_years
+        past_totals = [yearly_totals[y] for y in past_years]
+        hist_avg = round(sum(past_totals) / len(past_totals), 1) if past_totals else 0.0
+
+        recent_year = sorted_years[-1]
+        recent_total = yearly_totals[recent_year]
+
+        if hist_avg > 0:
+            diff_pct = round(((recent_total - hist_avg) / hist_avg) * 100, 1)
+            if diff_pct >= 0:
+                badge_text = f"Historical Context: {recent_year} tracked {diff_pct}% above the 2015-{past_years[-1]} historical average ({hist_avg} mm/yr)"
+            else:
+                badge_text = f"Historical Context: {recent_year} tracked {abs(diff_pct)}% below the 2015-{past_years[-1]} historical average ({hist_avg} mm/yr)"
+        else:
+            diff_pct = 0.0
+            badge_text = f"Historical Context: {recent_year} total annual rainfall recorded at {recent_total} mm"
+
+        return jsonify({
+            "yearly_totals": yearly_totals,
+            "years": sorted_years,
+            "totals": [yearly_totals[y] for y in sorted_years],
+            "historical_avg": hist_avg,
+            "recent_year": recent_year,
+            "recent_total": recent_total,
+            "variance_pct": diff_pct,
+            "badge_text": badge_text
+        })
+
+    except Exception as e:
+        return jsonify({"error": f"Failed to fetch historical data: {str(e)}"}), 500
+
+
 @app.route("/analyze_flood_image", methods=["POST"])
 def analyze_flood_image():
     file = None
@@ -351,7 +422,6 @@ def analyze_flood_image():
         content = file.read()
         file_length = len(content)
 
-        # Deterministic light contrast heuristic based on image byte distribution
         byte_sum = sum(content[:1000]) if file_length > 1000 else sum(content)
         sample_hash = (file_length + byte_sum) % 100
 
