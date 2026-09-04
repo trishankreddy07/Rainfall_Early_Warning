@@ -7,6 +7,7 @@
     <title>AI Rainfall & Inundation Warning System</title>
     <!-- Google Fonts & FontAwesome Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/css/main/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -315,35 +316,6 @@
         .soil-tag.Yellow { background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.5); color: #fde68a; }
         .soil-tag.Green { background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.5); color: #86efac; }
 
-        /* Sliders */
-        .slider-group {
-            margin-bottom: 14px;
-        }
-
-        .slider-header {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.82rem;
-            font-weight: 600;
-            color: #cbd5e1;
-            margin-bottom: 6px;
-        }
-
-        .slider-header span.val {
-            color: #38bdf8;
-            font-family: monospace;
-        }
-
-        .range-slider {
-            width: 100%;
-            height: 6px;
-            border-radius: 5px;
-            background: rgba(255, 255, 255, 0.15);
-            outline: none;
-            cursor: pointer;
-            accent-color: #38bdf8;
-        }
-
         /* Action Buttons */
         .btn-predict {
             width: 100%;
@@ -366,22 +338,6 @@
         .btn-predict:hover {
             transform: translateY(-2px);
             box-shadow: 0 12px 25px rgba(59, 130, 246, 0.6);
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #e2e8f0;
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.2);
         }
 
         /* Result Alert Container */
@@ -541,38 +497,6 @@
             </div>
         </div>
 
-        <!-- Interactive "What-If" Climate Escalation Sliders Panel -->
-        <div class="feature-card">
-            <div class="feature-card-header">
-                <h3><i class="fa-solid fa-sliders"></i> <span id="lbl-whatif-title">Interactive Climate Escalation Simulator</span></h3>
-                <button class="btn-secondary" onclick="resetSliders()"><i class="fa-solid fa-rotate-left"></i> Reset</button>
-            </div>
-
-            <div class="slider-group">
-                <div class="slider-header">
-                    <span>🌧️ Rainfall Escalation</span>
-                    <span class="val" id="val-slider-rainfall">+0 mm</span>
-                </div>
-                <input type="range" id="slider-rainfall" class="range-slider" min="0" max="100" value="0" step="1" oninput="onSliderInput()">
-            </div>
-
-            <div class="slider-group">
-                <div class="slider-header">
-                    <span>📉 Pressure Drop</span>
-                    <span class="val" id="val-slider-pressure">-0 hPa</span>
-                </div>
-                <input type="range" id="slider-pressure" class="range-slider" min="0" max="20" value="0" step="1" oninput="onSliderInput()">
-            </div>
-
-            <div class="slider-group">
-                <div class="slider-header">
-                    <span>💧 Humidity Spike</span>
-                    <span class="val" id="val-slider-humidity">+0 %</span>
-                </div>
-                <input type="range" id="slider-humidity" class="range-slider" min="0" max="20" value="0" step="1" oninput="onSliderInput()">
-            </div>
-        </div>
-
         <!-- Historical Rainfall Comparison 2015–Present Card -->
         <div id="historical-card" class="feature-card" style="display: none;">
             <div class="feature-card-header">
@@ -651,7 +575,6 @@
                 rainfall: "Recent Rainfall (mm)",
                 predictBtn: "Run AI Prediction",
                 chartTitle: "24-Hour Risk Trajectory",
-                whatifTitle: "Interactive Climate Escalation Simulator",
                 histTitle: "Historical Rainfall Comparison (2015–Present)",
                 cropTitle: "Agricultural Crop Submergence Advisor",
                 photoTitle: "Crowdsourced Flood Photo Estimator (AI Vision)"
@@ -668,7 +591,6 @@
                 rainfall: "हाल की वर्षा (मिमी)",
                 predictBtn: "एआई पूर्वानुमान चलाएं",
                 chartTitle: "24-घंटे का जोखिम प्रक्षेपवक्र",
-                whatifTitle: "इंटरएक्टिव जलवायु अनुकरणकर्ता",
                 histTitle: "ऐतिहासिक वर्षा तुलना (2015-वर्तमान)",
                 cropTitle: "कृषि फसल जलमग्नता और कटाई सलाहकार",
                 photoTitle: "बाढ़ फोटो गहराई विश्लेषक"
@@ -685,7 +607,6 @@
                 rainfall: "ఇటీవలి వర్షపాతం (mm)",
                 predictBtn: "AI అంచనాను ప్రారంభించండి",
                 chartTitle: "24-గంటల ప్రమాద పటం",
-                whatifTitle: "వాతావరణ మార్పుల సిమ్యులేటర్",
                 histTitle: "చారిత్రక వర్షపాత పోలిక (2015–ప్రస్తుతం)",
                 cropTitle: "వ్యవసాయ పంటల ముంపు సలహాదారు",
                 photoTitle: "వరద ఫోటో లోతు విశ్లేషణ"
@@ -702,7 +623,6 @@
                 rainfall: "சமீபத்திய மழைப்பொழிவு (mm)",
                 predictBtn: "AI கணிப்பை இயக்கவும்",
                 chartTitle: "24-மணிநேர இடர் வரைபடம்",
-                whatifTitle: "காலநிலை உருவகப்படுத்துதல்",
                 histTitle: "வரலாற்று மழைப்பொழிவு ஒப்பீடு (2015-தற்போது)",
                 cropTitle: "விவசாய பயிர் மூழ்கல் ஆலோசகர்",
                 photoTitle: "வெள்ள புகைப்பட ஆழம் பகுப்பாய்வு"
@@ -724,7 +644,6 @@
             document.getElementById('lbl-rainfall').textContent = dict.rainfall;
             document.getElementById('lbl-predict-btn').textContent = dict.predictBtn;
             document.getElementById('lbl-chart-title').textContent = dict.chartTitle;
-            document.getElementById('lbl-whatif-title').textContent = dict.whatifTitle;
             document.getElementById('lbl-hist-title').textContent = dict.histTitle;
             document.getElementById('lbl-crop-title').textContent = dict.cropTitle;
             document.getElementById('lbl-photo-title').textContent = dict.photoTitle;
@@ -776,15 +695,6 @@
             soilVal.textContent = `${sm} m³/m³ (${satPct}% Saturation)`;
             soilTag.textContent = riskText;
             soilTag.className = `soil-tag ${riskColor}`;
-        }
-
-        // JS Debounce Helper
-        function debounce(func, wait) {
-            let timeout;
-            return function (...args) {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(this, args), wait);
-            };
         }
 
         // Render 24-Hour Chart via Chart.js
@@ -990,7 +900,7 @@
                     throw new Error(data.error || "Failed to fetch weather from backend.");
                 }
 
-                // Store base weather data for What-If simulator calibration
+                // Store base weather data
                 baseWeatherData.humidity = data.weather ? data.weather.humidity : data.humidity;
                 baseWeatherData.pressure = data.weather ? data.weather.pressure : data.pressure;
                 baseWeatherData.rainfall = data.weather ? data.weather.rainfall : data.rainfall;
@@ -1009,9 +919,6 @@
                 if (data.soil_moisture !== undefined) {
                     updateSoilDisplay(data.soil_moisture, data.saturation_pct, data.runoff_risk_level, data.runoff_color);
                 }
-
-                // Reset What-If Sliders
-                resetSlidersSilently();
 
                 // Update Header Banner
                 const finalLabel = data.location_name || regionLabel || `Location (${latitude.toFixed(2)}, ${longitude.toFixed(2)})`;
@@ -1035,54 +942,6 @@
                 console.error(err);
                 showResult(`Weather Fetch Warning: ${err.message}. You can still adjust values manually and predict.`, 'Warning');
             }
-        }
-
-        // What-If Climate Escalation Simulator Handlers (Debounced & Calibrated)
-        function resetSlidersSilently() {
-            document.getElementById('slider-rainfall').value = 0;
-            document.getElementById('slider-pressure').value = 0;
-            document.getElementById('slider-humidity').value = 0;
-            document.getElementById('val-slider-rainfall').textContent = '+0 mm';
-            document.getElementById('val-slider-pressure').textContent = '-0 hPa';
-            document.getElementById('val-slider-humidity').textContent = '+0 %';
-        }
-
-        function resetSliders() {
-            resetSlidersSilently();
-            document.getElementById('humidity').value = baseWeatherData.humidity;
-            document.getElementById('pressure').value = baseWeatherData.pressure;
-            document.getElementById('rainfall').value = baseWeatherData.rainfall;
-            sendManualData();
-        }
-
-        const debouncedPredict = debounce(async function () {
-            const addRain = parseFloat(document.getElementById('slider-rainfall').value) || 0;
-            const dropPres = parseFloat(document.getElementById('slider-pressure').value) || 0;
-            const spikeHum = parseFloat(document.getElementById('slider-humidity').value) || 0;
-
-            const effHum = Math.min(100, Math.max(0, baseWeatherData.humidity + spikeHum));
-            const effPres = Math.max(800, baseWeatherData.pressure - dropPres);
-            const effRain = Math.max(0, baseWeatherData.rainfall + addRain);
-
-            document.getElementById('humidity').value = effHum;
-            document.getElementById('pressure').value = effPres;
-            document.getElementById('rainfall').value = effRain;
-
-            // Trigger real-time prediction
-            await sendManualData();
-            evaluateCropAdvisory();
-        }, 300);
-
-        function onSliderInput() {
-            const addRain = parseFloat(document.getElementById('slider-rainfall').value) || 0;
-            const dropPres = parseFloat(document.getElementById('slider-pressure').value) || 0;
-            const spikeHum = parseFloat(document.getElementById('slider-humidity').value) || 0;
-
-            document.getElementById('val-slider-rainfall').textContent = `+${addRain} mm`;
-            document.getElementById('val-slider-pressure').textContent = `-${dropPres} hPa`;
-            document.getElementById('val-slider-humidity').textContent = `+${spikeHum} %`;
-
-            debouncedPredict();
         }
 
         // Agricultural Crop Submergence Advisor
