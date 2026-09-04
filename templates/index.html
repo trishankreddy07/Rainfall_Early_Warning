@@ -1272,8 +1272,19 @@
 
         async function submitFloodPhotoAnalysis() {
             const resultBox = document.getElementById('photo-result');
+            const analyzeBtn = document.getElementById('btn-analyze-photo');
+
+            if (analyzeBtn) {
+                analyzeBtn.disabled = true;
+                analyzeBtn.style.opacity = '0.75';
+                analyzeBtn.style.cursor = 'not-allowed';
+                analyzeBtn.innerHTML = '<i class="fa-solid fa-brain fa-spin"></i> AI Vision Analyzing Water Depth...';
+            }
+
             resultBox.style.display = 'block';
-            resultBox.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Analyzing ground flood photo heuristics (AI Vision)...';
+            resultBox.style.background = 'rgba(15, 23, 42, 0.6)';
+            resultBox.style.borderColor = 'rgba(56, 189, 248, 0.3)';
+            resultBox.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin" style="color:#38bdf8;"></i> AI Vision model is assessing ground flood depth & relative street objects...';
 
             try {
                 let response;
@@ -1309,13 +1320,42 @@
 
                 const depthLabel = data.depth_label || data.depth_tag || "Unknown";
                 const estimatedCm = data.estimated_cm !== undefined ? data.estimated_cm : data.depth_cm;
-                const riskIndicator = data.risk_indicator || data.risk_rating || "MODERATE";
+                const riskIndicator = (data.risk_indicator || data.risk_rating || "MODERATE").toUpperCase();
                 const advisory = data.advisory || data.advice || "";
-                const level = data.level || (riskIndicator === "HIGH" ? "Red" : "Green");
+                const engineName = data.engine || "AI Vision";
 
-                const color = level === 'Red' ? '#fca5a5' : '#86efac';
-                const badgeBg = level === 'Red' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(34, 197, 94, 0.2)';
-                const badgeBorder = level === 'Red' ? 'rgba(239, 68, 68, 0.4)' : 'rgba(34, 197, 94, 0.4)';
+                // Non-flood image handling
+                if (depthLabel.toLowerCase() === 'none' || riskIndicator === 'NONE' || data.status === 'error') {
+                    resultBox.style.background = 'rgba(56, 189, 248, 0.15)';
+                    resultBox.style.borderColor = 'rgba(56, 189, 248, 0.4)';
+                    resultBox.innerHTML = `
+                        <div style="color: #7dd3fc; font-weight: 600; font-size: 0.92rem; margin-bottom: 4px;">
+                            <i class="fa-solid fa-sun"></i> No Flooding Detected
+                        </div>
+                        <div style="color: #cbd5e1; font-size: 0.85rem;">${advisory || 'The AI Vision model did not detect standing water or street inundation in this photo.'}</div>
+                        <span style="font-size:0.75rem; color:#94a3b8; margin-top:6px; display:block;">Powered by ${engineName}</span>
+                    `;
+                    return;
+                }
+
+                // Dynamic Risk Color Scheme
+                let color = '#86efac';
+                let badgeBg = 'rgba(34, 197, 94, 0.2)';
+                let badgeBorder = 'rgba(34, 197, 94, 0.4)';
+
+                if (riskIndicator === 'MODERATE') {
+                    color = '#fde68a';
+                    badgeBg = 'rgba(245, 158, 11, 0.2)';
+                    badgeBorder = 'rgba(245, 158, 11, 0.4)';
+                } else if (riskIndicator === 'HIGH') {
+                    color = '#fca5a5';
+                    badgeBg = 'rgba(239, 68, 68, 0.2)';
+                    badgeBorder = 'rgba(239, 68, 68, 0.4)';
+                } else if (riskIndicator === 'SEVERE' || riskIndicator === 'CRITICAL') {
+                    color = '#f87171';
+                    badgeBg = 'rgba(185, 28, 28, 0.3)';
+                    badgeBorder = 'rgba(239, 68, 68, 0.6)';
+                }
 
                 resultBox.style.background = badgeBg;
                 resultBox.style.borderColor = badgeBorder;
@@ -1329,10 +1369,11 @@
                             Estimated Depth: ~${estimatedCm} cm
                         </span>
                     </div>
-                    <div style="display:flex; align-items:center; gap: 8px; margin-bottom:6px;">
-                        <span style="font-size:0.78rem; font-weight:700; padding:2px 6px; border-radius:4px; background:${color}; color:#000;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; flex-wrap:wrap; gap:4px;">
+                        <span style="font-size:0.78rem; font-weight:700; padding:2px 8px; border-radius:4px; background:${color}; color:#000;">
                             ${riskIndicator} RISK
                         </span>
+                        <span style="font-size:0.75rem; color:#94a3b8;"><i class="fa-solid fa-microchip"></i> ${engineName}</span>
                     </div>
                     <div style="color: #e2e8f0; font-size: 0.85rem; line-height: 1.4;">
                         <strong>Safety Advisory:</strong> ${advisory}
@@ -1344,6 +1385,13 @@
                 resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
                 resultBox.style.borderColor = 'rgba(239, 68, 68, 0.4)';
                 resultBox.innerHTML = `<span style="color: #f87171;"><i class="fa-solid fa-xmark"></i> ${err.message}</span>`;
+            } finally {
+                if (analyzeBtn) {
+                    analyzeBtn.disabled = false;
+                    analyzeBtn.style.opacity = '1';
+                    analyzeBtn.style.cursor = 'pointer';
+                    analyzeBtn.innerHTML = '<i class="fa-solid fa-eye"></i> Analyze Flood Depth';
+                }
             }
         }
 

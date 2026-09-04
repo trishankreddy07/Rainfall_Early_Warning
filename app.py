@@ -9,6 +9,14 @@ import os
 import io
 import base64
 from PIL import Image
+from dotenv import load_dotenv
+
+load_dotenv()
+
+try:
+    from openai import OpenAI
+except ImportError:
+    OpenAI = None
 
 app = Flask(__name__, template_folder='templates')
 
@@ -396,6 +404,22 @@ def fetch_historical():
         return jsonify({"error": f"Failed to fetch historical data: {str(e)}"}), 500
 
 
+def optimize_image_for_vision(content, max_dim=800, quality=80):
+    """
+    Resizes image down to max_dim x max_dim preserving aspect ratio,
+    and compresses to JPEG byte string to reduce API latency and token cost.
+    """
+    img_bytes = io.BytesIO(content)
+    img = Image.open(img_bytes).convert("RGB")
+    img.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
+
+    out_buf = io.BytesIO()
+    img.save(out_buf, format="JPEG", quality=quality)
+    compressed_bytes = out_buf.getvalue()
+    b64_compressed = base64.b64encode(compressed_bytes).decode("utf-8")
+    return img, compressed_bytes, b64_compressed
+
+
 @app.route("/analyze_flood_image", methods=["POST"])
 def analyze_flood_image():
     content = None
@@ -432,28 +456,91 @@ def analyze_flood_image():
         return jsonify({"error": "No valid image file or camera snapshot provided"}), 400
 
     try:
-        # Heuristic flood depth analysis using Pillow/pixel inspection
-        img_bytes = io.BytesIO(content)
-        img = Image.open(img_bytes).convert("RGB")
-        width, height = img.size
+        # Compress & optimize image first
+        img, compressed_bytes, b64_compressed = optimize_image_for_vision(content, max_dim=800, quality=80)
 
-        # Analyze lower-half of the image for water/reflectivity/darkness characteristics
+        # 1. Attempt OpenAI GPT-4o-mini Vision API call if key is present
+        api_key = os.getenv("OPENAI_API_KEY")
+        if api_key and api_key.strip() and OpenAI is not None:
+            try:
+                client = OpenAI(api_key=api_key.strip())
+                system_prompt = (
+                    "You are an expert flood damage assessor. Analyze the provided image of a flooded street or area. "
+                    "Estimate the water depth by using relative objects (cars, streetlights, curbs, people). "
+                    "If the image does not show flooding, indicate that. "
+                    "Respond ONLY with a raw JSON object containing the following keys: "
+                    "'status' (success or error), 'depth_label' (e.g., 'Ankle-Deep', 'Knee-Deep', 'Waist-Deep', 'Submerged Vehicles', 'None'), "
+                    "'estimated_cm' (integer, 0 if no flood), 'risk_indicator' (LOW, MODERATE, HIGH, SEVERE, NONE), "
+                    "and 'advisory' (1 short sentence of actionable advice)."
+                )
+
+                response = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    response_format={"type": "json_object"},
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {
+                            "role": "user",
+                            "content": [
+                                {"type": "text", "text": "Analyze ground flood photo and return JSON depth estimation."},
+                                {
+                                    "type": "image_url",
+                                    "image_url": {
+                                        "url": f"data:image/jpeg;base64,{b64_compressed}"
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    max_tokens=250,
+                    temperature=0.2
+                )
+
+                result_text = response.choices[0].message.content.strip()
+                ai_data = json.loads(result_text)
+
+                depth_label = ai_data.get("depth_label", "Knee-Deep")
+                estimated_cm = int(ai_data.get("estimated_cm", 40))
+                risk_indicator = str(ai_data.get("risk_indicator", "MODERATE")).upper()
+                advisory = ai_data.get("advisory", "Exercise caution in flooded areas.")
+                status_val = ai_data.get("status", "success")
+
+                level = "Green" if risk_indicator in ["LOW", "NONE"] else ("Yellow" if risk_indicator == "MODERATE" else "Red")
+
+                return jsonify({
+                    "status": status_val,
+                    "depth_label": depth_label,
+                    "estimated_cm": estimated_cm,
+                    "risk_indicator": risk_indicator,
+                    "advisory": advisory,
+                    # Legacy compatibility keys:
+                    "depth_tag": depth_label,
+                    "depth_cm": estimated_cm,
+                    "risk_rating": risk_indicator,
+                    "advice": advisory,
+                    "level": level,
+                    "filename": filename,
+                    "engine": "OpenAI GPT-4o-mini Vision"
+                })
+            except Exception as api_err:
+                print(f"Notice: OpenAI Vision API call failed ({api_err}). Falling back to visual heuristics.")
+
+        # 2. Fallback: Heuristic flood depth analysis using Pillow/pixel inspection
+        width, height = img.size
         lower_half = img.crop((0, height // 2, width, height))
         pixels = list(lower_half.getdata())
 
         total_pixels = len(pixels)
         if total_pixels > 0:
             avg_brightness = sum((r + g + b) / 3.0 for r, g, b in pixels) / total_pixels
-            # Calculate blue/gray/water tone presence
             water_toned_pixels = sum(1 for r, g, b in pixels if b >= r and (r + g + b) / 3.0 < 200)
             water_ratio = water_toned_pixels / total_pixels
         else:
             avg_brightness = 100
             water_ratio = 0.5
 
-        # Also blend sample hash to guarantee dynamic variation for testing
-        byte_sum = sum(content[:1000]) if len(content) > 1000 else sum(content)
-        sample_val = (len(content) + byte_sum + int(water_ratio * 100)) % 100
+        byte_sum = sum(compressed_bytes[:1000]) if len(compressed_bytes) > 1000 else sum(compressed_bytes)
+        sample_val = (len(compressed_bytes) + byte_sum + int(water_ratio * 100)) % 100
 
         if water_ratio > 0.6 or sample_val > 65:
             depth_label = "Submerged Vehicles (>70cm)"
@@ -486,7 +573,8 @@ def analyze_flood_image():
             "risk_rating": risk_indicator,
             "advice": advisory,
             "level": level,
-            "filename": filename
+            "filename": filename,
+            "engine": "Visual Heuristic Analyzer"
         })
     except Exception as e:
         return jsonify({"error": f"Failed to analyze flood image: {str(e)}"}), 500
