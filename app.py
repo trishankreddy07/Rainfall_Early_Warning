@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, jsonify
+import joblib
 import pickle
 import numpy as np
 import pandas as pd
@@ -8,25 +9,34 @@ import os
 
 app = Flask(__name__, template_folder='templates')
 
-# Load the saved ML Model / Pipeline gracefully
+# Load the saved ML Model / Pipeline gracefully using joblib / pickle
 pipeline = None
 model_type = "pipeline"
 
 if os.path.exists('rainfall_pipeline.pkl'):
     try:
-        with open('rainfall_pipeline.pkl', 'rb') as f:
-            pipeline = pickle.load(f)
-            model_type = "pipeline"
+        pipeline = joblib.load('rainfall_pipeline.pkl')
+        model_type = "pipeline"
     except Exception as e:
-        print(f"Error loading rainfall_pipeline.pkl: {e}")
+        print(f"Error loading rainfall_pipeline.pkl with joblib: {e}")
+        try:
+            with open('rainfall_pipeline.pkl', 'rb') as f:
+                pipeline = pickle.load(f)
+                model_type = "pipeline"
+        except Exception as e2:
+            print(f"Error loading rainfall_pipeline.pkl with pickle: {e2}")
 
 if pipeline is None and os.path.exists('rainfall_model.pkl'):
     try:
-        with open('rainfall_model.pkl', 'rb') as f:
-            pipeline = pickle.load(f)
-            model_type = "model"
+        pipeline = joblib.load('rainfall_model.pkl')
+        model_type = "model"
     except Exception as e:
-        print(f"Error loading rainfall_model.pkl: {e}")
+        try:
+            with open('rainfall_model.pkl', 'rb') as f:
+                pipeline = pickle.load(f)
+                model_type = "model"
+        except Exception as e2:
+            print(f"Error loading rainfall_model.pkl: {e2}")
 
 
 def parse_input(val, default=0.0):

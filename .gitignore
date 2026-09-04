@@ -1,1 +1,8 @@
-*.pkl
+# Block heavy pipeline file from git tracking
+rainfall_pipeline.pkl
+
+# Ignore python bytecode and environments
+__pycache__/
+*.pyc
+.venv/
+venv/
