@@ -7,7 +7,6 @@
     <title>AI Rainfall & Inundation Warning System</title>
     <!-- Google Fonts & FontAwesome Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/css/main/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -486,14 +485,14 @@
 
         <div id="result"></div>
 
-        <!-- 24-Hour Risk Trajectory Chart Section -->
+        <!-- 30-Day Rainfall Tracker Chart Section -->
         <div id="chart-card" class="feature-card" style="display: none;">
             <div class="feature-card-header">
-                <h3><i class="fa-solid fa-chart-line"></i> <span id="lbl-chart-title">24-Hour Risk Trajectory</span></h3>
-                <span id="chart-subtitle" style="font-size:0.78rem; color:var(--text-muted);">Hourly Risk Forecast</span>
+                <h3><i class="fa-solid fa-chart-area"></i> <span id="lbl-chart-title">30-Day Rainfall Tracker</span></h3>
+                <span id="chart-subtitle" style="font-size:0.78rem; color:var(--text-muted);">Daily Precipitation History</span>
             </div>
             <div class="chart-wrapper">
-                <canvas id="hourlyRiskChart"></canvas>
+                <canvas id="thirtyDayRainChart"></canvas>
             </div>
         </div>
 
@@ -555,7 +554,7 @@
     </div>
 
     <script>
-        let riskChart = null;
+        let thirtyDayChart = null;
         let histChart = null;
         let baseWeatherData = { humidity: 85, pressure: 1005, rainfall: 12, min_temp: 18, max_temp: 28, soil_moisture: 0.30 };
         let currentCoords = { lat: 17.38, lon: 78.48 };
@@ -574,7 +573,7 @@
                 maxTemp: "Max Temp (°C)",
                 rainfall: "Recent Rainfall (mm)",
                 predictBtn: "Run AI Prediction",
-                chartTitle: "24-Hour Risk Trajectory",
+                chartTitle: "30-Day Rainfall Tracker",
                 histTitle: "Historical Rainfall Comparison (2015–Present)",
                 cropTitle: "Agricultural Crop Submergence Advisor",
                 photoTitle: "Crowdsourced Flood Photo Estimator (AI Vision)"
@@ -590,7 +589,7 @@
                 maxTemp: "अधिकतम तापमान (°C)",
                 rainfall: "हाल की वर्षा (मिमी)",
                 predictBtn: "एआई पूर्वानुमान चलाएं",
-                chartTitle: "24-घंटे का जोखिम प्रक्षेपवक्र",
+                chartTitle: "30-दिवसीय वर्षा ट्रैकर",
                 histTitle: "ऐतिहासिक वर्षा तुलना (2015-वर्तमान)",
                 cropTitle: "कृषि फसल जलमग्नता और कटाई सलाहकार",
                 photoTitle: "बाढ़ फोटो गहराई विश्लेषक"
@@ -606,7 +605,7 @@
                 maxTemp: "గరిష్ట ఉష్ణోగ్రత (°C)",
                 rainfall: "ఇటీవలి వర్షపాతం (mm)",
                 predictBtn: "AI అంచనాను ప్రారంభించండి",
-                chartTitle: "24-గంటల ప్రమాద పటం",
+                chartTitle: "30-రోజుల వర్షపాత సమాచారం",
                 histTitle: "చారిత్రక వర్షపాత పోలిక (2015–ప్రస్తుతం)",
                 cropTitle: "వ్యవసాయ పంటల ముంపు సలహాదారు",
                 photoTitle: "వరద ఫోటో లోతు విశ్లేషణ"
@@ -622,7 +621,7 @@
                 maxTemp: "அதிகபட்ச வெப்பநிலை (°C)",
                 rainfall: "சமீபத்திய மழைப்பொழிவு (mm)",
                 predictBtn: "AI கணிப்பை இயக்கவும்",
-                chartTitle: "24-மணிநேர இடர் வரைபடம்",
+                chartTitle: "30-நாள் மழைப்பொழிவு கண்காணிப்பு",
                 histTitle: "வரலாற்று மழைப்பொழிவு ஒப்பீடு (2015-தற்போது)",
                 cropTitle: "விவசாய பயிர் மூழ்கல் ஆலோசகர்",
                 photoTitle: "வெள்ள புகைப்பட ஆழம் பகுப்பாய்வு"
@@ -697,52 +696,37 @@
             soilTag.className = `soil-tag ${riskColor}`;
         }
 
-        // Render 24-Hour Chart via Chart.js
-        function renderRiskChart(trajectory) {
+        // Render 30-Day Rainfall Tracker Bar Chart via Chart.js
+        function renderThirtyDayChart(tracking) {
             const chartCard = document.getElementById('chart-card');
             chartCard.style.display = 'block';
 
-            const canvas = document.getElementById('hourlyRiskChart');
+            const canvas = document.getElementById('thirtyDayRainChart');
             const ctx = canvas.getContext('2d');
 
-            const labels = trajectory.map(item => item.time);
-            const probabilities = trajectory.map(item => item.probability);
+            const labels = tracking.map(item => item.date_display);
+            const rainfallData = tracking.map(item => item.rainfall);
 
             const gradient = ctx.createLinearGradient(0, 0, 0, 220);
-            const maxProb = Math.max(...probabilities);
+            gradient.addColorStop(0, 'rgba(56, 189, 248, 0.6)');
+            gradient.addColorStop(1, 'rgba(15, 23, 42, 0.1)');
 
-            if (maxProb > 50) {
-                gradient.addColorStop(0, 'rgba(239, 68, 68, 0.45)');
-                gradient.addColorStop(0.7, 'rgba(239, 68, 68, 0.08)');
-                gradient.addColorStop(1, 'rgba(15, 23, 42, 0)');
-            } else {
-                gradient.addColorStop(0, 'rgba(56, 189, 248, 0.4)');
-                gradient.addColorStop(0.7, 'rgba(56, 189, 248, 0.08)');
-                gradient.addColorStop(1, 'rgba(15, 23, 42, 0)');
+            if (thirtyDayChart) {
+                thirtyDayChart.destroy();
             }
 
-            const lineColor = maxProb > 50 ? '#f87171' : '#38bdf8';
-
-            if (riskChart) {
-                riskChart.destroy();
-            }
-
-            riskChart = new Chart(ctx, {
-                type: 'line',
+            thirtyDayChart = new Chart(ctx, {
+                type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Inundation Risk (%)',
-                        data: probabilities,
-                        borderColor: lineColor,
-                        borderWidth: 3,
+                        label: 'Daily Rainfall (mm)',
+                        data: rainfallData,
                         backgroundColor: gradient,
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: lineColor,
-                        pointBorderColor: '#fff',
-                        pointHoverRadius: 6,
-                        pointRadius: 3
+                        borderColor: '#38bdf8',
+                        borderWidth: 1,
+                        borderRadius: 4,
+                        hoverBackgroundColor: '#06b6d4'
                     }]
                 },
                 options: {
@@ -751,16 +735,15 @@
                     scales: {
                         x: {
                             grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                            ticks: { color: '#94a3b8', font: { size: 11 } }
+                            ticks: { color: '#94a3b8', font: { size: 10 }, maxRotation: 45 }
                         },
                         y: {
-                            min: 0,
-                            max: 100,
+                            beginAtZero: true,
                             grid: { color: 'rgba(255, 255, 255, 0.08)' },
                             ticks: {
                                 color: '#94a3b8',
                                 font: { size: 11 },
-                                callback: function (value) { return value + '%'; }
+                                callback: function (value) { return value + ' mm'; }
                             }
                         }
                     },
@@ -773,7 +756,7 @@
                             borderColor: 'rgba(255, 255, 255, 0.2)',
                             borderWidth: 1,
                             callbacks: {
-                                label: function (context) { return ` Risk: ${context.parsed.y}%`; }
+                                label: function (context) { return ` Daily Rainfall: ${context.parsed.y} mm`; }
                             }
                         }
                     }
@@ -864,10 +847,8 @@
                     throw new Error(data.error || "Failed to fetch historical data.");
                 }
 
-                // Update badge text
                 badge.innerHTML = `<i class="fa-solid fa-chart-column"></i> ${data.badge_text}`;
 
-                // Render Historical Bar Chart
                 if (data.years && data.totals) {
                     renderHistoricalChart(data.years, data.totals, data.recent_year);
                 }
@@ -927,9 +908,9 @@
                 // Display ML prediction result
                 showResult(data.status, data.level);
 
-                // Render 24-Hour Hourly Risk Chart
-                if (data.hourly_trajectory && data.hourly_trajectory.length > 0) {
-                    renderRiskChart(data.hourly_trajectory);
+                // Render 30-Day Rainfall Tracker Chart
+                if (data.thirty_day_tracking && data.thirty_day_tracking.length > 0) {
+                    renderThirtyDayChart(data.thirty_day_tracking);
                 }
 
                 // Evaluate Crop Advisory

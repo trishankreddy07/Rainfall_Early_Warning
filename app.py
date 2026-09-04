@@ -200,8 +200,9 @@ def fetch_weather():
             f"https://api.open-meteo.com/v1/forecast?"
             f"latitude={lat}&longitude={lon}"
             f"&current=relative_humidity_2m,surface_pressure,temperature_2m"
-            f"&hourly=relative_humidity_2m,surface_pressure,precipitation,temperature_2m,soil_moisture_0_to_10cm"
+            f"&hourly=soil_moisture_0_to_10cm"
             f"&daily=temperature_2m_max,temperature_2m_min,precipitation_sum"
+            f"&past_days=30"
             f"&timezone=auto"
         )
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -216,15 +217,19 @@ def fetch_weather():
         pressure = round(float(current.get("surface_pressure", 1013.25)), 1)
         current_temp = round(float(current.get("temperature_2m", 25.0)), 1)
 
+        daily_times = daily.get("time", [])
+        daily_precip = daily.get("precipitation_sum", [])
         max_temp_list = daily.get("temperature_2m_max", [])
         min_temp_list = daily.get("temperature_2m_min", [])
-        precip_list = daily.get("precipitation_sum", [])
 
-        max_temp = round(float(max_temp_list[0]), 1) if max_temp_list and max_temp_list[0] is not None else round(current_temp + 5.0, 1)
-        min_temp = round(float(min_temp_list[0]), 1) if min_temp_list and min_temp_list[0] is not None else round(current_temp - 5.0, 1)
+        # Suffix/Index for today's forecast
+        today_idx = 30 if len(daily_times) > 30 else (len(daily_times) - 1 if len(daily_times) > 0 else 0)
 
-        if precip_list and len(precip_list) > 0 and precip_list[0] is not None:
-            rainfall = round(float(precip_list[0]), 1)
+        max_temp = round(float(max_temp_list[today_idx]), 1) if max_temp_list and today_idx < len(max_temp_list) and max_temp_list[today_idx] is not None else round(current_temp + 5.0, 1)
+        min_temp = round(float(min_temp_list[today_idx]), 1) if min_temp_list and today_idx < len(min_temp_list) and min_temp_list[today_idx] is not None else round(current_temp - 5.0, 1)
+
+        if daily_precip and today_idx < len(daily_precip) and daily_precip[today_idx] is not None:
+            rainfall = round(float(daily_precip[today_idx]), 1)
         else:
             rainfall = 0.0
 
@@ -256,47 +261,28 @@ def fetch_weather():
         else:
             resolved_location = resolve_location_name(lat, lon)
 
-        # Build 24-Hour Hourly Trajectory
-        hourly_times = hourly.get("time", [])
-        hourly_hum = hourly.get("relative_humidity_2m", [])
-        hourly_pres = hourly.get("surface_pressure", [])
-        hourly_precip = hourly.get("precipitation", [])
+        # Build 30-Day Historical Rainfall Tracking
+        month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+        thirty_day_tracking = []
 
-        current_time_str = current.get("time", "")
-        start_idx = 0
-        if current_time_str and hourly_times:
-            curr_prefix = current_time_str.split(":")[0]
-            for idx, t_str in enumerate(hourly_times):
-                if t_str.startswith(curr_prefix):
-                    start_idx = idx
-                    break
+        for d_time, d_precip in zip(daily_times, daily_precip):
+            rf_val = round(float(d_precip), 1) if d_precip is not None else 0.0
+            try:
+                parts = d_time.split("-")
+                month_num = int(parts[1])
+                day_num = int(parts[2])
+                date_display = f"{month_names[month_num - 1]} {day_num}"
+            except Exception:
+                date_display = d_time
 
-        end_idx = min(start_idx + 24, len(hourly_times))
-        indices = list(range(start_idx, end_idx))
-        if len(indices) < 24 and len(hourly_times) >= 24:
-            indices = list(range(max(0, len(hourly_times) - 24), len(hourly_times)))
-
-        hourly_trajectory = []
-        for i in indices:
-            raw_time = hourly_times[i] if i < len(hourly_times) else f"H+{i}"
-            time_display = raw_time.split("T")[1] if "T" in raw_time else raw_time
-
-            h_hum = round(float(hourly_hum[i]), 1) if i < len(hourly_hum) and hourly_hum[i] is not None else humidity
-            h_pres = round(float(hourly_pres[i]), 1) if i < len(hourly_pres) and hourly_pres[i] is not None else pressure
-            h_precip = round(float(hourly_precip[i]), 1) if i < len(hourly_precip) and hourly_precip[i] is not None else 0.0
-
-            h_status, h_level, h_prob, h_safety = process_and_predict(h_hum, h_pres, min_temp, max_temp, h_precip)
-
-            hourly_trajectory.append({
-                "time": time_display,
-                "humidity": h_hum,
-                "pressure": h_pres,
-                "rainfall": h_precip,
-                "probability": h_prob,
-                "safety_score": h_safety,
-                "level": h_level,
-                "status": h_status
+            thirty_day_tracking.append({
+                "date": d_time,
+                "date_display": date_display,
+                "rainfall": rf_val
             })
+
+        # Sliced to 31 entries up to current day
+        thirty_day_tracking = thirty_day_tracking[:31]
 
         weather_obs = {
             "humidity": humidity,
@@ -329,7 +315,7 @@ def fetch_weather():
             "runoff_color": runoff_color,
             "location_name": resolved_location,
             "weather": weather_obs,
-            "hourly_trajectory": hourly_trajectory
+            "thirty_day_tracking": thirty_day_tracking
         })
 
     except Exception as e:
