@@ -183,6 +183,7 @@ def fetch_weather():
             f"https://api.open-meteo.com/v1/forecast?"
             f"latitude={lat}&longitude={lon}"
             f"&current=relative_humidity_2m,surface_pressure,temperature_2m"
+            f"&hourly=relative_humidity_2m,surface_pressure,precipitation,temperature_2m"
             f"&daily=temperature_2m_max,temperature_2m_min,precipitation_sum"
             f"&timezone=auto"
         )
@@ -192,6 +193,7 @@ def fetch_weather():
 
         current = res_data.get("current", {})
         daily = res_data.get("daily", {})
+        hourly = res_data.get("hourly", {})
 
         humidity = round(float(current.get("relative_humidity_2m", 70.0)), 1)
         pressure = round(float(current.get("surface_pressure", 1013.25)), 1)
@@ -204,13 +206,53 @@ def fetch_weather():
         max_temp = round(float(max_temp_list[0]), 1) if max_temp_list and max_temp_list[0] is not None else round(current_temp + 5.0, 1)
         min_temp = round(float(min_temp_list[0]), 1) if min_temp_list and min_temp_list[0] is not None else round(current_temp - 5.0, 1)
 
-        # Extract daily precipitation_sum accurately
         if precip_list and len(precip_list) > 0 and precip_list[0] is not None:
             rainfall = round(float(precip_list[0]), 1)
         else:
             rainfall = 0.0
 
         status, level, probability = process_and_predict(humidity, pressure, min_temp, max_temp, rainfall)
+
+        # Build 24-Hour Hourly Trajectory
+        hourly_times = hourly.get("time", [])
+        hourly_hum = hourly.get("relative_humidity_2m", [])
+        hourly_pres = hourly.get("surface_pressure", [])
+        hourly_precip = hourly.get("precipitation", [])
+
+        current_time_str = current.get("time", "")
+        start_idx = 0
+        if current_time_str and hourly_times:
+            curr_prefix = current_time_str.split(":")[0]  # e.g., "2026-09-04T19"
+            for idx, t_str in enumerate(hourly_times):
+                if t_str.startswith(curr_prefix):
+                    start_idx = idx
+                    break
+
+        end_idx = min(start_idx + 24, len(hourly_times))
+        indices = list(range(start_idx, end_idx))
+        if len(indices) < 24 and len(hourly_times) >= 24:
+            indices = list(range(max(0, len(hourly_times) - 24), len(hourly_times)))
+
+        hourly_trajectory = []
+        for i in indices:
+            raw_time = hourly_times[i] if i < len(hourly_times) else f"H+{i}"
+            time_display = raw_time.split("T")[1] if "T" in raw_time else raw_time
+            
+            h_hum = round(float(hourly_hum[i]), 1) if i < len(hourly_hum) and hourly_hum[i] is not None else humidity
+            h_pres = round(float(hourly_pres[i]), 1) if i < len(hourly_pres) and hourly_pres[i] is not None else pressure
+            h_precip = round(float(hourly_precip[i]), 1) if i < len(hourly_precip) and hourly_precip[i] is not None else 0.0
+
+            h_status, h_level, h_prob = process_and_predict(h_hum, h_pres, min_temp, max_temp, h_precip)
+
+            hourly_trajectory.append({
+                "time": time_display,
+                "humidity": h_hum,
+                "pressure": h_pres,
+                "rainfall": h_precip,
+                "probability": h_prob,
+                "level": h_level,
+                "status": h_status
+            })
 
         weather_obs = {
             "humidity": humidity,
@@ -232,7 +274,8 @@ def fetch_weather():
             "rainfall": rainfall,
             "min_temp": min_temp,
             "max_temp": max_temp,
-            "weather": weather_obs
+            "weather": weather_obs,
+            "hourly_trajectory": hourly_trajectory
         })
 
     except Exception as e:

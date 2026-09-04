@@ -8,6 +8,8 @@
     <!-- Google Fonts & FontAwesome Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         :root {
@@ -35,36 +37,36 @@
             justify-content: center;
             align-items: center;
             color: var(--text-light);
-            padding: 20px;
+            padding: 20px 15px;
         }
 
         .container {
             width: 100%;
-            max-width: 600px;
+            max-width: 650px;
             background: var(--card-bg);
             backdrop-filter: blur(18px);
             -webkit-backdrop-filter: blur(18px);
             border: 1px solid var(--card-border);
             border-radius: 24px;
-            padding: 35px 30px;
+            padding: 30px 25px;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
         }
 
         .header {
             text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
 
         .header i {
-            font-size: 3rem;
+            font-size: 2.8rem;
             background: linear-gradient(45deg, #38bdf8, #818cf8);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
         .header h1 {
-            font-size: 1.6rem;
+            font-size: 1.5rem;
             font-weight: 700;
             letter-spacing: -0.5px;
         }
@@ -75,19 +77,59 @@
             margin-top: 4px;
         }
 
+        /* Live Location & Time Banner */
+        .live-banner {
+            background: rgba(15, 23, 42, 0.55);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            border-radius: 14px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .banner-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.82rem;
+            color: #e2e8f0;
+        }
+
+        .banner-item i {
+            color: var(--primary-accent);
+        }
+
+        .banner-location {
+            font-weight: 600;
+            color: #7dd3fc;
+        }
+
+        .banner-time {
+            font-family: monospace;
+            font-weight: 600;
+            color: #f43f5e;
+            background: rgba(244, 63, 94, 0.1);
+            padding: 3px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(244, 63, 94, 0.25);
+        }
+
         /* Location Toolbar & Search Bar */
         .location-section {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 16px;
             padding: 16px;
-            margin-bottom: 25px;
+            margin-bottom: 22px;
         }
 
         .location-controls {
             display: flex;
             gap: 10px;
-            margin-bottom: 12px;
         }
 
         .search-box {
@@ -149,30 +191,12 @@
             box-shadow: 0 6px 16px rgba(13, 148, 136, 0.4);
         }
 
-        /* Location Metadata Badge */
-        .location-badge {
-            background: rgba(56, 189, 248, 0.12);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            border-radius: 10px;
-            padding: 8px 12px;
-            font-size: 0.82rem;
-            color: #7dd3fc;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            animation: fadeIn 0.3s ease-in-out;
-        }
-
-        .location-badge i {
-            color: #38bdf8;
-        }
-
         /* Form Inputs */
         .input-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
-            margin-bottom: 25px;
+            gap: 14px;
+            margin-bottom: 22px;
         }
 
         .input-group {
@@ -237,14 +261,10 @@
             box-shadow: 0 12px 25px rgba(59, 130, 246, 0.6);
         }
 
-        .btn-predict:active {
-            transform: translateY(0);
-        }
-
         /* Result Alert Container */
         #result {
-            margin-top: 25px;
-            padding: 18px;
+            margin-top: 20px;
+            padding: 16px;
             border-radius: 14px;
             text-align: center;
             font-weight: 600;
@@ -279,6 +299,47 @@
             color: #fde68a;
         }
 
+        /* Chart Section */
+        .chart-card {
+            margin-top: 25px;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            padding: 18px;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .chart-header h3 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #f8fafc;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chart-header h3 i {
+            color: #38bdf8;
+        }
+
+        .chart-subtitle {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .chart-wrapper {
+            position: relative;
+            width: 100%;
+            height: 250px;
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -307,6 +368,11 @@
             .input-group.full-width {
                 grid-column: span 1;
             }
+
+            .live-banner {
+                flex-direction: column;
+                align-items: flex-start;
+            }
         }
     </style>
 </head>
@@ -318,6 +384,19 @@
             <i class="fa-solid fa-cloud-showers-heavy"></i>
             <h1>Early Warning System</h1>
             <p>AI/ML Heavy Rainfall & Inundation Risk Prediction</p>
+        </div>
+
+        <!-- Live Location & Time Banner -->
+        <div class="live-banner">
+            <div class="banner-item">
+                <i class="fa-solid fa-location-dot"></i>
+                <span id="banner-location" class="banner-location">Region: Hyderabad, India</span>
+                <span id="banner-coords" style="color: #94a3b8; font-size: 0.78rem;">[17.38, 78.48]</span>
+            </div>
+            <div class="banner-item">
+                <i class="fa-solid fa-clock"></i>
+                <span id="live-clock" class="banner-time">00:00:00 AM</span>
+            </div>
         </div>
 
         <!-- Automated Data Collection Section -->
@@ -333,11 +412,6 @@
                 <button id="btn-location" class="btn-location" onclick="useCurrentLocation()">
                     <i class="fa-solid fa-location-crosshairs"></i> GPS Location
                 </button>
-            </div>
-
-            <div id="location-badge" class="location-badge" style="display: none;">
-                <i class="fa-solid fa-location-dot"></i>
-                <span id="location-text">Detected Region: Not Selected</span>
             </div>
         </div>
 
@@ -374,9 +448,32 @@
         </button>
 
         <div id="result"></div>
+
+        <!-- 24-Hour Risk Trajectory Chart Section -->
+        <div id="chart-card" class="chart-card" style="display: none;">
+            <div class="chart-header">
+                <h3><i class="fa-solid fa-chart-line"></i> 24-Hour Risk Trajectory</h3>
+                <span id="chart-subtitle" class="chart-subtitle">Hourly Risk Forecast</span>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="hourlyRiskChart"></canvas>
+            </div>
+        </div>
     </div>
 
     <script>
+        let riskChart = null;
+
+        // Live Clock Ticking Function
+        function updateLiveClock() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            document.getElementById('live-clock').textContent = `${dateStr} • ${timeStr}`;
+        }
+        setInterval(updateLiveClock, 1000);
+        updateLiveClock();
+
         function showLoading(message) {
             const resultDiv = document.getElementById('result');
             resultDiv.style.display = 'block';
@@ -399,11 +496,96 @@
             }
         }
 
-        function setLocationBadge(regionName, lat, lon) {
-            const badge = document.getElementById('location-badge');
-            const textSpan = document.getElementById('location-text');
-            textSpan.textContent = `Detected Region: ${regionName} [${lat.toFixed(2)}, ${lon.toFixed(2)}]`;
-            badge.style.display = 'flex';
+        function setBannerLocation(regionName, lat, lon) {
+            document.getElementById('banner-location').textContent = `Region: ${regionName}`;
+            document.getElementById('banner-coords').textContent = `[${lat.toFixed(2)}, ${lon.toFixed(2)}]`;
+        }
+
+        // Render 24-Hour Chart via Chart.js
+        function renderRiskChart(trajectory) {
+            const chartCard = document.getElementById('chart-card');
+            chartCard.style.display = 'block';
+
+            const canvas = document.getElementById('hourlyRiskChart');
+            const ctx = canvas.getContext('2d');
+
+            const labels = trajectory.map(item => item.time);
+            const probabilities = trajectory.map(item => item.probability);
+
+            // Dynamic Gradient fill
+            const gradient = ctx.createLinearGradient(0, 0, 0, 220);
+            const maxProb = Math.max(...probabilities);
+
+            if (maxProb > 50) {
+                gradient.addColorStop(0, 'rgba(239, 68, 68, 0.45)');
+                gradient.addColorStop(0.7, 'rgba(239, 68, 68, 0.08)');
+                gradient.addColorStop(1, 'rgba(15, 23, 42, 0)');
+            } else {
+                gradient.addColorStop(0, 'rgba(56, 189, 248, 0.4)');
+                gradient.addColorStop(0.7, 'rgba(56, 189, 248, 0.08)');
+                gradient.addColorStop(1, 'rgba(15, 23, 42, 0)');
+            }
+
+            const lineColor = maxProb > 50 ? '#f87171' : '#38bdf8';
+
+            if (riskChart) {
+                riskChart.destroy();
+            }
+
+            riskChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Inundation Risk (%)',
+                        data: probabilities,
+                        borderColor: lineColor,
+                        borderWidth: 3,
+                        backgroundColor: gradient,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: lineColor,
+                        pointBorderColor: '#fff',
+                        pointHoverRadius: 6,
+                        pointRadius: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#94a3b8', font: { size: 11 } }
+                        },
+                        y: {
+                            min: 0,
+                            max: 100,
+                            grid: { color: 'rgba(255, 255, 255, 0.08)' },
+                            ticks: {
+                                color: '#94a3b8',
+                                font: { size: 11 },
+                                callback: function (value) { return value + '%'; }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            titleColor: '#38bdf8',
+                            bodyColor: '#f8fafc',
+                            borderColor: 'rgba(255, 255, 255, 0.2)',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function (context) {
+                                    return ` Risk: ${context.parsed.y}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
         }
 
         // Fetch Live Weather & Predict via Backend /fetch_weather
@@ -423,7 +605,7 @@
                     throw new Error(data.error || "Failed to fetch weather from backend.");
                 }
 
-                // Auto-fill form fields strictly using exact returned weather metrics
+                // Auto-fill form fields using returned weather metrics
                 const rainfallVal = (data.weather && data.weather.rainfall !== undefined) ? data.weather.rainfall : (data.rainfall !== undefined ? data.rainfall : 0.0);
                 const humidityVal = (data.weather && data.weather.humidity !== undefined) ? data.weather.humidity : (data.humidity !== undefined ? data.humidity : 0.0);
                 const pressureVal = (data.weather && data.weather.pressure !== undefined) ? data.weather.pressure : (data.pressure !== undefined ? data.pressure : 0.0);
@@ -436,12 +618,17 @@
                 document.getElementById('min_temp').value = minTempVal;
                 document.getElementById('max_temp').value = maxTempVal;
 
-                // Display Location metadata
+                // Update Header Banner
                 const label = regionLabel || `Location (${latitude.toFixed(2)}, ${longitude.toFixed(2)})`;
-                setLocationBadge(label, latitude, longitude);
+                setBannerLocation(label, latitude, longitude);
 
                 // Display ML prediction result
                 showResult(data.status, data.level);
+
+                // Render 24-Hour Hourly Risk Chart if available
+                if (data.hourly_trajectory && data.hourly_trajectory.length > 0) {
+                    renderRiskChart(data.hourly_trajectory);
+                }
 
             } catch (err) {
                 console.error(err);
@@ -503,8 +690,9 @@
                 const lat = topMatch.latitude;
                 const lon = topMatch.longitude;
                 const cityName = topMatch.name;
+                const admin1 = topMatch.admin1 ? `, ${topMatch.admin1}` : '';
                 const country = topMatch.country ? `, ${topMatch.country}` : '';
-                const regionName = `${cityName}${country}`;
+                const regionName = `${cityName}${admin1}${country}`;
 
                 fetchWeatherData(lat, lon, regionName);
 
